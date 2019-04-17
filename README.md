@@ -15,6 +15,6 @@ This library is used to decode messages to Ledger API values and to encode such 
 [Project Readme](lib-integration-java/README.md)
 
 ## FpML Clearing Example
-This example shows how to integrate a DAML model with an FpML message workflow and how to extend the workflow within DAML. It demonstrates a simple clearing process and extends the protocol with a custom approval step, which is also conformant with the FpML standard.
+This example shows how to integrate a DAML model with an FpML message workflow and how to extend the workflow within DAML. It demonstrates a simple clearing process, which is conformant with the FpML standard.
 
 [Project Readme](example-fpml-clearing-java/README.md)
