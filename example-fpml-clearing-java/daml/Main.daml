@@ -1,0 +1,43 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Main where
+
+import Role.Operator
+import Role.ClearingHouse
+import Role.ClearingMember
+import Role.Client
+
+init = scenario do
+  operator <- getParty "OPERATOR"
+  ccp      <- getParty "CLEARCO"
+
+  -- Bootstrap clearing house
+  opRole <- submit operator do    create OperatorRole with operator
+  ccpInvite <- submit operator do exercise opRole InviteClearingHouse with house = ccp
+  ccpContract <- submit ccp do    exercise ccpInvite ClearingHouse_Accept
+
+  -- Clearing house invites two members
+  member1 <- getParty "XYZ_BANK"
+  member2 <- getParty "QLM_BANK"
+  memberInvite1 <- submit ccp do exercise ccpContract InviteClearingMember with member = member1
+  memberInvite2 <- submit ccp do exercise ccpContract InviteClearingMember with member = member2
+
+  -- Members accept invites
+  memberContract1 <- submit member1 do exercise memberInvite1 ClearingMember_Accept
+  memberContract2 <- submit member2 do exercise memberInvite2 ClearingMember_Accept
+
+  -- Member1 onboards client1 as a client
+  client1 <- getParty "ABC_IM"
+  clientInvite1 <- submit member1 do exercise memberContract1 InviteClient with client = client1
+
+  -- Member2 onboards client2 as a client
+  client2 <- getParty "DEF_IM"
+  clientInvite2 <- submit member2 do exercise memberContract2 InviteClient with client = client2
+
+  -- clients sign contracts
+  clientContract1 <- submit client1 do exercise clientInvite1 Client_Accept
+  clientContract2 <- submit client2 do exercise clientInvite2 Client_Accept
+
+  return ()

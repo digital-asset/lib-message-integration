@@ -1,0 +1,18 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Role.Operator where
+
+import Role.ClearingHouse
+
+template OperatorRole
+  with
+    operator : Party
+  where
+    signatory operator
+
+    controller operator can
+      nonconsuming InviteClearingHouse : ContractId ClearingHouseInvite
+        with house : Party
+        do create ClearingHouseInvite with operator; house

@@ -1,0 +1,50 @@
+Name:            metagen
+Version:         0.1
+Cabal-Version:   >= 1.8
+Author:          Tim Williams
+Maintainer:      tim.williams@digitalasset.com
+Stability:       Experimental
+Build-Type:      Simple
+
+Executable metagen
+  Main-Is:         Main.hs
+  Buildable: True
+  Hs-Source-Dirs:  src
+
+  Build-Depends:   base, containers, hashable, mtl, transformers, pretty,
+                   unordered-containers, directory, filepath, vector,
+                   time, text, exceptions, bytestring, casing, aeson, aeson-pretty,
+                   optparse-applicative, parsec, indents >= 0.5, xml, extra,
+                   monad-logger
+
+  Other-Modules:   DA.CDM.Rosetta.Convert,
+                   DA.CDM.Rosetta.Metadata,
+                   DA.CDM.Rosetta.Parse,
+                   DA.CDM.Rosetta.Schema,
+                   DA.Daml.GenDaml,
+                   DA.Daml.TypeModel,
+                   DA.Metagen.Metadata,
+                   DA.XML.Schema.Convert,
+                   DA.XML.Schema.Metadata,
+                   DA.XML.Schema.Parse,
+                   DA.XML.Schema.Schema,
+                   Paths_metagen
+
+  Extensions:      FlexibleContexts
+                   LambdaCase
+                   NamedFieldPuns
+                   OverloadedStrings
+                   ParallelListComp
+                   PatternGuards
+                   RankNTypes
+                   RecordWildCards
+                   ScopedTypeVariables
+                   TupleSections
+                   ViewPatterns
+
+  ghc-options: -O -g -threaded -rtsopts -with-rtsopts=-N -Wall
+               -funbox-strict-fields
+               -fwarn-tabs
+               -fno-warn-orphans
+               -fno-warn-unused-do-bind
+               -fno-warn-name-shadowing

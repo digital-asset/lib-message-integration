@@ -1,0 +1,73 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+{-# LANGUAGE FlexibleContexts #-}
+
+daml 1.2
+module Process.Novation where
+
+import qualified FpML.V510.Confirmation as FpML
+
+-- Novate a bilateral trade into two that face the clearing house.
+novate
+    : FpML.Trade
+   -> FpML.PartyReference
+   -> (FpML.Trade, FpML.Trade)
+novate trade clearer =
+    case trade.product of
+        FpML.Product_FxSingleLeg fxSingleLeg ->
+            let (p1, p2) = novateFxSingleLeg fxSingleLeg clearer
+            in ( trade with product = FpML.Product_FxSingleLeg p1
+               , trade with product = FpML.Product_FxSingleLeg p2
+               )
+        FpML.Product_FxSwap fxSwap ->
+            let (p1, p2) = novateFxSwap fxSwap clearer
+            in ( trade with product = FpML.Product_FxSwap p1
+               , trade with product = FpML.Product_FxSwap p2
+               )
+        _ -> error $ "Unsupported product: " <> show trade.product
+
+novateFxSingleLeg
+    : FpML.FxSingleLeg
+    -> FpML.PartyReference
+    -> (FpML.FxSingleLeg, FpML.FxSingleLeg)
+novateFxSingleLeg leg clearer = (leg1, leg2)
+  where
+    leg1 = leg with
+               exchangedCurrency1 = leg.exchangedCurrency1 with
+                                        payerPartyReference = clearer
+               exchangedCurrency2 = leg.exchangedCurrency2 with
+                                        receiverPartyReference = clearer
+
+    leg2 = leg with
+               exchangedCurrency1 = leg.exchangedCurrency1 with
+                                        receiverPartyReference = clearer
+               exchangedCurrency2 = leg.exchangedCurrency2 with
+                                        payerPartyReference = clearer
+
+
+novateFxSwap : FpML.FxSwap -> FpML.PartyReference -> (FpML.FxSwap, FpML.FxSwap)
+novateFxSwap swap clearer = (swap1, swap2)
+  where
+    swap1 = swap with nearLeg = nearLeg1; farLeg = farLeg1
+    swap2 = swap with nearLeg = nearLeg2; farLeg = farLeg2
+    (nearLeg1, nearLeg2) = novateFxSwapLeg swap.nearLeg clearer
+    (farLeg1, farLeg2)   = novateFxSwapLeg swap.farLeg  clearer
+
+novateFxSwapLeg
+    : FpML.FxSwapLeg
+    -> FpML.PartyReference
+    -> (FpML.FxSwapLeg, FpML.FxSwapLeg)
+novateFxSwapLeg leg clearer = (leg1, leg2)
+  where
+    leg1 = leg with
+               exchangedCurrency1 = leg.exchangedCurrency1 with
+                                        payerPartyReference = clearer
+               exchangedCurrency2 = leg.exchangedCurrency2 with
+                                        receiverPartyReference = clearer
+
+    leg2 = leg with
+               exchangedCurrency1 = leg.exchangedCurrency1 with
+                                        receiverPartyReference = clearer
+               exchangedCurrency2 = leg.exchangedCurrency2 with
+                                        payerPartyReference = clearer

@@ -1,0 +1,100 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Util.Messages where
+
+import Process.Novation
+
+import qualified FpML.V510.Confirmation as FpML
+
+messageIdScheme : Text = "http://www.sef.com/coding-scheme/message-id"
+messageAddressScheme : Text = "http://www.fpml.org/coding-scheme/external/iso9362"
+
+
+-- | Generate an acknowledgement message for the request clearing message.
+acknowledgeRequest
+    : Party
+   -> Time
+   -> FpML.RequestClearing
+   -> FpML.EventRequestAcknowledgement
+acknowledgeRequest house now req =
+  FpML.EventRequestAcknowledgement with
+    fpmlVersion = "5-10"
+    expectedBuild = None
+    actualBuild = None
+    header = FpML.ResponseMessageHeader with
+        messageId = FpML.MessageId with
+            messageIdScheme
+            content = req.header.messageId.content <> "_ACK"
+        inReplyTo = req.header.messageId
+        sentBy    = FpML.MessageAddress with
+            messageAddressScheme = Some messageAddressScheme
+            content = show house
+        sendTo    = [req.header.sentBy]
+        copyTo    = []
+        creationTimestamp = now
+        expiryTimestamp = None
+        implementationSpecification = None
+        partyMessageInformation = []
+    validation = []
+    parentCorrelationId = None
+    correlationId = case req.correlationAndSequence_model of
+        Some c -> c.correlationId
+        None   -> error "Expected a correlation id"
+    sequence_model = None
+    onBehalfOf_model = None
+    originalMessage = None
+    tradeReferenceInformation_model = None
+    partiesAndAccounts_model = None
+
+
+-- | TODO Generate a clearing confirmed message
+clearingConfirmed
+    : Party
+   -> Time
+   -> FpML.RequestClearing
+   -> FpML.ClearingConfirmed
+clearingConfirmed house now req =
+  FpML.ClearingConfirmed with
+    fpmlVersion = "5-10"
+    expectedBuild = None
+    actualBuild = None
+    header = FpML.NotificationMessageHeader with
+        messageId = FpML.MessageId with
+            messageIdScheme
+            content = req.header.messageId.content <> "_CONFIRM"
+        inReplyTo = Some req.header.messageId
+        sentBy    = FpML.MessageAddress with
+            messageAddressScheme = Some messageAddressScheme
+            content = show house
+        sendTo    = [req.header.sentBy]
+        copyTo    = []
+        creationTimestamp = now
+        expiryTimestamp = None
+        implementationSpecification = None
+        partyMessageInformation = []
+    validation = []
+    correlationAndOptionalSequence_model = None
+    onBehalfOf_model = None
+    compression_model = None
+    portfolioReference_model = None
+    clearingResults_model = Some results
+    eventValuation_model = None
+    creditLimitInformation = []
+    partiesAndAccounts_model = None
+  where
+    clearer   = FpML.PartyReference "CLEARCO"
+    submittedTrade = case req.choice_ of
+        FpML.RequestClearing_choice_Items (FpML.RequestClearing_items _ trade) -> trade
+        _ -> error "Unexpected message format"
+    (trade1, trade2) = novate submittedTrade clearer
+    results  = FpML.ClearingConfirmed_ClearingResults_model_Clearing clearing
+    clearing = FpML.Clearing with
+      submitted = wrapTrade submittedTrade
+      cleared   = [wrapTrade trade1, wrapTrade trade2]
+
+wrapTrade : FpML.Trade -> FpML.TradeWrapper
+wrapTrade trade =
+    FpML.TradeWrapper_Items
+        (FpML.TradeWrapper_items None trade)

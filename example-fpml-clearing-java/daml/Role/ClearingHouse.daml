@@ -1,0 +1,46 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Role.ClearingHouse where
+
+import Role.ClearingMember
+import Util.Messages
+import qualified FpML.V510.Confirmation as FpML
+
+template ClearingHouseInvite
+  with
+    operator : Party
+    house : Party
+  where
+    signatory operator
+    controller house can
+      ClearingHouse_Accept : ContractId ClearingHouseRole
+        do create ClearingHouseRole with operator; house
+
+      ClearingHouse_Decline : ()
+        do return ()
+
+template ClearingHouseRole
+  with
+    operator : Party
+    house    : Party
+  where
+    signatory operator, house
+
+    controller house can
+      nonconsuming InviteClearingMember : ContractId ClearingMemberInvite
+        with member : Party
+          do create ClearingMemberInvite with house; member
+
+    controller operator can
+      nonconsuming SubmitRequestClearing : ()
+        with message : FpML.RequestClearing
+        do timestamp <- getTime
+           let partyInfo = extractPartyInfo message
+               ack       = acknowledgeRequest house timestamp message
+           create RequestAcknowledgementEvent with
+             house; timestamp; partyInfo; ack
+           create RequestClearingEvent with
+             house; timestamp; partyInfo; message
+           return ()

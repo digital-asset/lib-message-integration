@@ -1,0 +1,122 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Role.ClearingMember where
+
+import qualified DA.Map as Map
+import qualified FpML.V510.Confirmation as FpML
+import Role.Client
+import Util.Messages
+
+template ClearingMemberInvite
+  with
+    house  : Party
+    member : Party
+  where
+    signatory house
+
+    controller member can
+      ClearingMember_Accept : ContractId ClearingMemberRole
+        do create ClearingMemberRole with house; member
+
+      ClearingMember_Decline : ()
+        do return ()
+
+template ClearingMemberRole
+  with
+    house  : Party
+    member : Party
+  where
+    signatory house, member
+
+    controller member can
+      nonconsuming InviteClient : ContractId ClientInvite
+        with client : Party
+          do create ClientInvite with house; member; client
+
+    controller house can
+      -- may immediately create a ClearingConfirmedEvent contract
+      -- or RequestConsent contract, depending on rule/limits
+      nonconsuming HandleRequestClearing : ()
+        with event : RequestClearingEvent; context : EventContext
+          do
+            now <- getTime
+            create ClearingConfirmedEvent with house; member; message = clearingConfirmed house now event.message
+            return ()
+
+template RequestClearingEvent
+  with
+    house     : Party
+    timestamp : Time
+    partyInfo : PartyInfo
+    message   : FpML.RequestClearing
+  where
+    signatory house
+    controller house can
+      DispatchRequestClearing : ()
+        with event : RequestClearingEvent; context : EventContext
+          do exercise context.memberCid1 HandleRequestClearing with event; context
+             exercise context.memberCid2 HandleRequestClearing with event; context
+             return ()
+
+-- Bot listens to these and sends out messages.
+template ClearingConfirmedEvent
+  with
+    house   : Party
+    member  : Party
+    message : FpML.ClearingConfirmed
+ where
+   signatory house, member
+
+template RequestAcknowledgementEvent
+  with
+    house     : Party
+    timestamp : Time
+    partyInfo : PartyInfo
+    ack       : FpML.EventRequestAcknowledgement
+  where
+    signatory house
+
+-- This information is looked up by the EventProcessor Bot
+-- using PartyInfo and supplied to relevant choice exercises.
+data EventContext = EventContext with
+    clientCid1 : ContractId ClientRole
+    clientCid2 : ContractId ClientRole
+    memberCid1 : ContractId ClearingMemberRole
+    memberCid2 : ContractId ClearingMemberRole
+  deriving (Eq, Show)
+
+-- Extracted from the FpML.RequestClearing message.
+data PartyInfo = PartyInfo with
+    sefName     : Text
+    party1Name  : Text
+    party2Name  : Text
+    member1Name : Text
+    member2Name : Text
+  deriving (Show, Eq)
+
+extractPartyInfo : FpML.RequestClearing -> PartyInfo
+extractPartyInfo msg =
+    PartyInfo with
+      sefName     = extract "sef"
+      party1Name  = extract "party1"
+      party2Name  = extract "party2"
+      member1Name = extract "broker1"
+      member2Name = extract "broker2"
+
+  where
+
+    extract href = case Map.lookup href partiesMap of
+        Some name -> name
+        None      -> error $ "Could not find party with href: " <> href
+
+    partiesMap = Map.fromList $ map getParties msg.party
+
+    getParties : FpML.FpmlParty -> (Text, Text) -- href, name
+    getParties p = case p.choice_ of
+      FpML.FpmlParty_choice_Items1 items1 ->
+        case items1.partyId of
+          [partyId] -> (p.id_, partyId.content)
+          ps        -> error $ "Unexpected number of party names: " <> show ps
+      _ -> error "Unsupported message structure"

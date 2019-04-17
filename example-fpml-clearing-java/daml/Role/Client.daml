@@ -1,0 +1,31 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Role.Client where
+
+template ClientRole
+  with
+    house  : Party
+    member : Party
+    client : Party
+  where
+    signatory house, member, client
+    agreement "Upon entering into this agreement, the client obtains the right to submit "
+              <> "transactions for clearing using the member as an agent in accordance with "
+              <> "the clearing rules."
+
+template ClientInvite
+  with
+    house  : Party
+    member : Party
+    client : Party
+  where
+    signatory house, member
+
+    controller client can
+      Client_Accept : ContractId ClientRole
+        do create ClientRole with house; member; client
+
+      Client_Decline : ()
+        do return ()
