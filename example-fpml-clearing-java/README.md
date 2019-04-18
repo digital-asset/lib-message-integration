@@ -12,8 +12,10 @@ This example shows a simple FpML-based workflow orchestrated via DAML. It shows 
 
 ## Prerequisites
 
-- [DAML SDK](https://docs.daml.com/getting-started/installation.html)
+- [Install the DAML SDK](https://docs.daml.com/getting-started/installation.html)
+  - Make sure to [configure the Maven repository](https://docs.daml.com/getting-started/installation.html#configure-maven)
 - [Java Integration Libarary](../lib-integration-java/README.md)
+  - Make sure to install the library locally using `mvn install -DskipTests`
 - [Scala SBT](https://www.scala-sbt.org/)
 
 ## Building
