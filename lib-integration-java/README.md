@@ -10,7 +10,7 @@ The Java Integration Library simplifies message integration with DAML-based ledg
 This strategy converts XML messages to and from Ledger API values following an XSD format specification. The `metagen` tool is used to generate DAML types and type metadata for a given XSD schema. This metadata is then used when encoding / decoding corresponding XML messages.
 
 ## Examples
-An example in the library demonstrates how encoders and decoders can be implemented using the above strategies. A more comprehensive example is available in the [FpML Clearing Demo](http://missinglink).
+An example in the library demonstrates how encoders and decoders can be implemented using the above strategies. A more comprehensive example is available in the [FpML Clearing Demo](../example-fpml-clearing-java/README.md).
 
 ### FpML Example
 The decoder in `ExampleFpmlDecoder.java` demonstrates how to implement a decoder that takes an FpML message and translates it to an exercise command for a choice on a given contract. The example assumes that a contract with a choice that corresponds to the root element name in the FpML message exists, which takes the message as its only argument. If your model is different you can adopt this example accordingly.
