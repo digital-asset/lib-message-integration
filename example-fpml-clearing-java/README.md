@@ -5,10 +5,10 @@
 This example shows a simple FpML-based workflow orchestrated via DAML. It shows how messages are ingested, how to work with FpML data structures from DAML, and how to output FpML messages from the ledger. This example is compatible with version 5.10 of the FpML specification.
 
 ## Workflow
-1. The operator ingests an `RequestClearing` FpML message via the `SubmitRequestClearing` choice on the `ClearingHouseRole` contract.
+1. The operator ingests a `RequestClearing` FpML message via the `SubmitRequestClearing` choice on the `ClearingHouseRole` contract.
 2. Party information is extracted from the message in DAML and `RequestAcknowledgementEvent` and `RequestClearingEvent` contracts are created.
 3. The application exercises the `DispatchRequestClearing`  choice on `RequestClearingEvent` providing contract ids of clearning member roles.
-4. The `HandleRequestClearing` choice is exercises on both `ClearingMemberRole` contracts, which generates the final `ClearingConfirmedEvent` contracts.
+4. The `HandleRequestClearing` choice is exercised on both `ClearingMemberRole` contracts, which generates the final `ClearingConfirmedEvent` contracts.
 
 ## Prerequisites
 
@@ -20,9 +20,15 @@ This example shows a simple FpML-based workflow orchestrated via DAML. It shows 
 
 ## Building
 
+To build the example:
 ```
 da compile
 ```
+To generate HTML documentation for the FpML DAML sources:
+```
+da run damlc -- docs -o target -f Html daml/FpML/V510/Confirmation.daml
+```
+You can the open `target/FpML-V510-Confirmation.html` to browse the documentation.
 
 ## Running
 From the example root directory:
