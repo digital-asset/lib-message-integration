@@ -6,12 +6,15 @@
  * Confidential, Proprietary, and/or the subject matter herein may be
  * protected under Patent law.  All rights reserved.
  */
-package com.digitalasset.integration.internal.codec.metadata;
+package com.digitalasset.integration.internal.codec.metadata.xsd;
+
+import com.digitalasset.integration.internal.codec.metadata.DamlTypes;
+import com.digitalasset.integration.internal.codec.metadata.MetadataReader;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.grpc.internal.IoUtils;
 import io.vavr.collection.Stream;
+import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,7 +35,7 @@ public class XsdMetadataReader extends MetadataReader<XmlFieldMeta, XmlTopLevelM
         URLConnection urlConnection = url.openConnection();
         InputStream is = urlConnection.getInputStream();
         if (is != null) {
-           return new XsdMetadata(new XsdMetadataReader().fromJSON(IoUtils.toByteArray(is)));
+           return new XsdMetadata(new XsdMetadataReader().fromJSON(IOUtils.toByteArray(is)));
         }
         throw new IllegalStateException("Could not load resource from url: "+url);
     }

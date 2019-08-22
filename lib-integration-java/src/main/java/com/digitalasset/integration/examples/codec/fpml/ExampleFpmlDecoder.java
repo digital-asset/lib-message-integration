@@ -14,6 +14,8 @@ import com.digitalasset.integration.api.codec.Decoder;
 import com.digitalasset.integration.api.codec.exceptions.SchemaValidationException;
 import com.digitalasset.integration.api.codec.exceptions.UnsupportedMessageException;
 import com.digitalasset.integration.internal.codec.metadata.*;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XsdMetadata;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XsdMetadataReader;
 import com.digitalasset.integration.internal.codec.strategies.DomXsdDecodeStrategy;
 import com.digitalasset.integration.internal.xml.QueryableXml;
 

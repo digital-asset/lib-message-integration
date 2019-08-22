@@ -6,7 +6,7 @@
  * Confidential, Proprietary, and/or the subject matter herein may be
  * protected under Patent law.  All rights reserved.
  */
-package com.digitalasset.integration.internal.codec.metadata;
+package com.digitalasset.integration.internal.codec.metadata.xsd;
 
 import java.util.Objects;
 

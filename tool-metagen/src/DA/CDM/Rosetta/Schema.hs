@@ -1,6 +1,3 @@
--- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
--- SPDX-License-Identifier: Apache-2.0
-
 -- | This module is an attempt to model the undocumented and very
 -- adhoc "Rosetta" language.
 
@@ -10,12 +7,14 @@ import Prelude hiding (Enum)
 import Data.Set (Set)
 
 newtype Namespace  = Namespace  { unNamespace  :: String } deriving (Eq, Ord, Show)
+newtype Version    = Version    { unVersion :: String } deriving (Eq, Ord, Show)
 newtype Identifier = Identifier { unIdentifier :: String } deriving (Eq, Ord, Show)
 newtype Annotation = Annotation { unAnnotation :: String } deriving (Eq, Ord, Show)
 newtype Style      = Style      { unStyle  :: Identifier } deriving (Eq, Ord, Show)
 
 data Schema = Schema
     { schemaNamespace :: Namespace
+    , schemaVersion   :: Version
     , schemaDecls     :: [Decl]
     } deriving Show
 
@@ -79,9 +78,7 @@ data ClassField = ClassField
     { classFieldName       :: Identifier
     , classFieldType       :: Maybe Identifier -- sometimes they have just "id (0..1);"
     , classFieldCard       :: Cardinality
-    , classFieldId         :: Bool
-    , classFieldMeta1      :: Set FieldMeta1
-    , classFieldMeta2      :: Set FieldMeta2
+    , classFieldMeta       :: Set FieldMeta
     , classFieldAnnotation :: Maybe Annotation
     } deriving Show
 
@@ -92,13 +89,10 @@ data EnumField = EnumField
     , enumFieldAnnotation  :: Maybe Annotation
     } deriving Show
 
-data ClassMeta = COneOf | CRosettaKey | CRosettaKeyValue
+data ClassMeta = COneOf | CKey | CRosettaKeyValue
     deriving (Eq, Ord, Show)
 
-data FieldMeta1 = FAnchor | FScheme | FId
-    deriving (Eq, Ord, Show)
-
-data FieldMeta2 = FRosettaKey | FRosettaKeyValue | FReference
+data FieldMeta = FScheme | FReference | FId
     deriving (Eq, Ord, Show)
 
 data Cardinality = Cardinality

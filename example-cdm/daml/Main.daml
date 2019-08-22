@@ -1,0 +1,78 @@
+-- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+daml 1.2
+module Main where
+
+import DA.Next.Set as Set
+import Org.Isda.Cdm.Classes hiding (Party)
+
+template ContractInstance
+  with
+    d : Contract
+    ps : [Party]
+  where
+    signatory ps
+    -- Problem: no link between d and ps
+
+template EventNotification
+  with
+    e : Event
+    ps : [Party]
+  where
+    signatory ps
+    -- Problem: no link between d and ps
+
+data LifecycleResult = LifecycleResult
+  with
+    ciCids : [ContractId ContractInstance]
+    enCid : ContractId EventNotification
+
+template EventInstance
+  with
+    e : Event -- has before contract(s) and after contract(s)
+    ps : [Party]
+  where
+    signatory ps
+    -- Problem: no link between d and ps
+
+    choice Lifeycle: LifecycleResult
+      with
+        exerciser : Party
+        ciCids : [ContractId ContractInstance]
+      controller exerciser
+      do
+        assert (exerciser `elem` ps)
+
+        -- Get CDM contracts from contract instances
+        inContracts <- mapA (\ciCid -> do ci <- fetch ciCid; return ci.d) ciCids
+
+        -- Get before contracts from CDM event
+        let beforeEventContracts = getBeforeContracts e
+
+        -- Check that they are identical
+        assert ((Set.fromList $ map getKey inContracts) == (Set.fromList $ map getKey beforeEventContracts))
+
+        -- Archive contract instances
+        mapA archive ciCids
+
+        -- Get after contracts from CDM event
+        let afterEventContracts = getAfterContracts e
+
+        -- Create contract instances
+        ciCids <- mapA (\d -> create ContractInstance with  ..) afterEventContracts
+
+        -- Create Event Notification
+        enCid <- create EventNotification with ..
+
+        return LifecycleResult with ..
+
+
+getBeforeContracts : Event -> [Contract]
+getBeforeContracts event = error "implement"
+
+getAfterContracts : Event -> [Contract]
+getAfterContracts event = error "implement"
+
+getKey : Contract -> Text
+getKey contract = error "implement"

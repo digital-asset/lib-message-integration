@@ -1,0 +1,10 @@
+sdk-version: 0.13.19
+name: cdmIntro
+source: daml/Main.daml
+scenario: Main:setup
+parties:
+  - Tester
+version: 0.0.1
+dependencies:
+  - daml-prim
+  - daml-stdlib

@@ -1,0 +1,44 @@
+namespace "org.isda.cdm"
+version "2.0.136"
+
+/*
+ * Variation Margin Mark to Market Calculation 
+ * 
+ * Goals:
+ *   1. Describe a product agnostic mark-to-market calculation such that it can be used for Variation Margin valuation process;
+ *   2. To be as transparent as possible in capturing which CDM elements are being used for the calculations.
+ */
+/*
+ * Option 1 - A mark to market calculation for an FX Forward as provided by a member firm
+ * 
+ *   1. + requires minimal infrastructure work to support VG thread
+ *   2. - delegates more work to the InterpolateForwardRate function, opaque usage of ForwardPayout
+ *   3. - will not support other products
+ * 
+ */
+calculation FxMarkToMarket <"Representation of sample mark to market calculation provided by a member firm.">
+{
+	: (quotedQuantity / interpolatedRate - baseQuantity) * interpolatedRate
+	  
+	where
+		// calculation inputs
+		forwardFX <"Alias for the forward FX path in the model, to make function more readable.">:
+			ForwardPayout -> underlier -> singleUnderlier -> underlyingProduct -> foreignExchange
+		quotedQuantity <"The amount of the quoted currency.">: 
+			if forwardFX -> exchangeRate -> quotedCurrencyPair -> quoteBasis = QuoteBasisEnum.Currency2PerCurrency1 
+			then forwardFX -> exchangedCurrency2 -> cashflowAmount -> amount 
+			else forwardFX -> exchangedCurrency1 -> cashflowAmount -> amount
+			
+		baseQuantity <"The amount of the base currency.">: 
+			if forwardFX -> exchangeRate -> quotedCurrencyPair -> quoteBasis = QuoteBasisEnum.Currency2PerCurrency1 
+			then forwardFX  -> exchangedCurrency1 -> cashflowAmount -> amount 
+			else forwardFX -> exchangedCurrency2 -> cashflowAmount -> amount
+			
+		interpolatedRate :
+			InterpolateForwardRate( ForwardPayout ) -> result
+}
+
+function InterpolateForwardRate( forward ForwardPayout )
+{
+	result number;
+}

@@ -11,6 +11,7 @@ module DA.Metagen.Metadata where
 import           DA.Daml.TypeModel
 
 import           Data.Aeson
+import           Data.List                 as List
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Text                  (Text)
@@ -105,11 +106,11 @@ instance ToJSON Card where
     toJSON SINGLE   = toJSON ("SINGLE" :: Text)
 
 genDecls
-    :: forall a. ToJSON a
+    :: forall a. Eq a
     => Env a
     -> [Decl a]
     -> [TypeDecl a]
-genDecls env = concatMap genDecl
+genDecls env = List.nub . concatMap genDecl
   where
     genDecl :: Decl a -> [TypeDecl a]
 
@@ -117,36 +118,42 @@ genDecls env = concatMap genDecl
         [TypeDecl VariantDecl (T.pack name) (map genEnumField constrs)]
       where
         genEnumField (cname, meta, _comment) =
-            FieldDecl (T.pack name <> "_" <> T.pack cname)
-                      (genType env (Prim PrimUnit))
-                      SINGLE
-                      meta
+            let (daml_type, _) = genType env (Prim PrimUnit)
+            in FieldDecl (T.pack name <> "_" <> T.pack cname)
+                         daml_type
+                         SINGLE
+                         meta
 
     genDecl (RecordType name fields _comment) =
-        [TypeDecl RecordDecl (T.pack name) (map (genField env) fields)]
+        let (field_decls, type_decls) = unzip $ map (genField env) fields
+        in TypeDecl RecordDecl (T.pack name) field_decls : List.concat type_decls
 
     genDecl (VariantType name fields _comment) =
-        [TypeDecl VariantDecl (T.pack name) (map (genField env) $ map prefix fields)]
+        let (field_decls, type_decls) = unzip $ map (genField env) fields
+        in TypeDecl VariantDecl (T.pack name) field_decls : List.concat type_decls
       where
         prefix f = f {field_name = name ++ "_" ++ field_name f }
 
     genDecl _ = []
 
-    genField :: Env a -> Field a -> FieldDecl a
+    genField :: Env a -> Field a -> (FieldDecl a, [TypeDecl a])
     genField env Field{..} =
-        FieldDecl
-            { name        = T.pack field_name
-            , daml_type   = genType env field_type
-            , cardinality = genCard field_cardinality
-            , meta        = field_meta
-            }
+        let (daml_type, type_decls) = genType env field_type
+            field_decl = FieldDecl
+              { name        = T.pack field_name
+              , daml_type   = daml_type
+              , cardinality = genCard field_cardinality
+              , meta        = field_meta
+              }
+        in (field_decl, type_decls)
 
-genType :: Env a -> Type a -> DamlType
-genType _ (Prim prim)      = genPrimType prim
-genType env (Nominal name) = genNominalType env name
-genType _ Product {} = error "Anonymous product types not currently supported"
-genType _ Sum     {} = error "Anonymous sum types not currently supported"
-genType _ Enum    {} = error "Anonymous enum types not currently supported"
+genType :: (Eq a) => Env a -> Type a -> (DamlType, [TypeDecl a])
+genType _ (Prim prim)                     = (genPrimType prim, [])
+genType env (Nominal name)                = genNominalType env name
+genType env (HigherKinded (name, types))  = genHigherKindedType env name types
+genType _ Product       {}  = error "Anonymous product types not currently supported"
+genType _ Sum           {} = error "Anonymous sum types not currently supported"
+genType _ Enum          {} = error "Anonymous enum types not currently supported"
 
 genPrimType :: PrimType -> DamlType
 genPrimType ty = DamlType (ppPrimType ty) PrimType
@@ -162,11 +169,11 @@ ppPrimType = \case
     PrimUnit    -> "UNIT"
     PrimParty   -> "PARTY"
 
-genNominalType :: Env a -> Name -> DamlType
+genNominalType :: (Eq a) => Env a -> Name -> (DamlType, [TypeDecl a])
 genNominalType env name
-    | isRecord name env  = DamlType (T.pack name) NamedRecordType
-    | isVariant name env = DamlType (T.pack name) NamedVariantType
-    | isEnum name env    = DamlType (T.pack name) NamedVariantType
+    | isRecord name env  = (DamlType (T.pack name) NamedRecordType, [])
+    | isVariant name env = (DamlType (T.pack name) NamedVariantType, [])
+    | isEnum name env    = (DamlType (T.pack name) NamedVariantType, [])
     | Just base <- isNewType name env
                        = genType env base
     | otherwise        = error $ "Unsupported type: " ++ name
@@ -194,6 +201,33 @@ isNewType name env =
     case Map.lookup name env of
         Just (NewType _ base _) -> Just base
         _ -> Nothing
+
+genHigherKindedType :: (Eq a) => Env a -> Name -> [Either PrimType Name] -> (DamlType, [TypeDecl a])
+genHigherKindedType env name types =
+    case Map.lookup name env of
+      Just (HigherRecordType recordName argNames fields comment) ->
+        let typeName = name ++ "_" ++ (List.intercalate "_" $ List.map ppType types)
+            damlType = DamlType (T.pack typeName) NamedRecordType
+
+            fields_new = map (applyType (Map.fromList $ zip argNames types)) fields
+            typeDecls = genDecls env $ [RecordType typeName fields_new comment]
+        in (damlType, typeDecls)
+      _ ->  error $ "Unsupported type: " ++ name
+
+    where
+      ppType :: Either PrimType Name -> String
+      ppType (Left primType) = T.unpack $ ppPrimType primType
+      ppType (Right name) = name
+
+      applyType :: Map ArgName (Either PrimType Name) -> Field a -> Field a
+      applyType name2type field
+        | Nominal name <- field_type field =
+            case Map.lookup name name2type of
+              Just (Left primType) -> field { field_type = Prim primType }
+              Just (Right name) -> field { field_type = Nominal name }
+              Nothing -> field
+        | otherwise = field
+
 
 genCard :: Cardinality -> Card
 genCard (Cardinality One  ToOne)  = SINGLE

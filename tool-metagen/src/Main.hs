@@ -19,6 +19,7 @@ import qualified DA.XML.Schema.Metadata     as XSD
 import           DA.XML.Schema.Parse        (parseXsd)
 import qualified DA.XML.Schema.Schema       as XSD
 import qualified DA.CDM.Rosetta.Convert     as Rosetta
+import qualified DA.CDM.Rosetta.Static      as Rosetta
 import qualified DA.CDM.Rosetta.Metadata    as Rosetta
 import qualified DA.CDM.Rosetta.Schema      as Rosetta
 import           DA.CDM.Rosetta.Parse       (parseRosetta)
@@ -196,43 +197,58 @@ runRosetta Options{..} baseDir = do
             { schemaNamespace = head $ map Rosetta.schemaNamespace schemas -- TODO
             , schemaDecls     = [ e | e@Rosetta.EnumDecl{} <- concatMap Rosetta.schemaDecls schemas ]
             }
+    let moduleEnums = Rosetta.convert (optDamlPackage ++ "." ++ "Enums") schemaEnums
 
     let schemaClasses = Rosetta.Schema
             { schemaNamespace = head $ map Rosetta.schemaNamespace schemas -- TODO
             , schemaDecls     = [ c | c@Rosetta.ClassDecl{} <- concatMap Rosetta.schemaDecls schemas ]
             }
+    let moduleClasses = Rosetta.convert (optDamlPackage ++ "." ++ "Classes") schemaClasses
+
+    let moduleMetaClasses = Rosetta.moduleMetaClasses
 
     let env = Rosetta.mkEnv schemaEnums <>
               Rosetta.mkEnv schemaClasses
 
-    let writeDaml' name imports env schema = do
-            modu <- runReaderT (Rosetta.convert (optDamlPackage ++ "." ++ name) schema) env
+    let writeDaml' name imports env mod = do
+            modu <- runReaderT mod env
             writeDaml (damlOutDir </> name ++ ".daml") $
                 modu { module_imports = imports }
 
 
     -- For DAML, split into two files (as we have always done so far)
-    writeDaml' "Enums" [] env schemaEnums
-    writeDaml' "Classes" [Unqualified $ optDamlPackage++".Enums"] env schemaClasses
+    writeDaml' "Enums" [] env moduleEnums
+    writeDaml' "Classes" [Unqualified $ optDamlPackage++".Enums"] env moduleClasses
+    writeDaml' "MetaClasses" [] env moduleMetaClasses
 
     -- For Json metadata, just emit one file.
-    let schema = Rosetta.Schema
-                     { schemaNamespace = head $ map Rosetta.schemaNamespace schemas -- TODO
-                     , schemaDecls = concatMap Rosetta.schemaDecls schemas
-                     }
+    let mod = do
+        modEnums <- moduleEnums
+        modClasses <- moduleClasses
+        modMetaClasses <- moduleMetaClasses
+        return Module
+            { module_name = "CDM"
+            , module_imports = []
+            , module_decls = List.concatMap module_decls [modEnums, modClasses, modMetaClasses]
+            , module_comment = noComment
+            }
 
-    logDebugN $ "Schema types count: " <> T.pack (show . length $ Rosetta.schemaDecls schema)
-
-    modu <- runReaderT (Rosetta.convert "CDM" schema) env
+    modu <- runReaderT mod env
     writeJson (jsonOutDir </> "CDM.json")
         . Rosetta.genMetadata
         $ modu
+    return ()
 
   where
     isRosetta f = takeExtension f == ".rosetta"
 
     blacklist = [ "model-cdm-config.rosetta"
                 , "model-cdm-calculations.rosetta"
+                , "model-cdm-calculations-csa.rosetta"
+                , "model-no-code-gen.rosetta"
+                , "model-cdm-event-functions.rosetta"
+                , "model-cdm-function-event-primitive.rosetta"
+                , "model-reg-reporting.rosetta"
                 ]
 
 

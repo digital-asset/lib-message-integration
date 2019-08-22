@@ -12,8 +12,8 @@ import com.daml.ledger.javaapi.data.Value;
 import com.digitalasset.integration.api.codec.exceptions.CodecException;
 import com.digitalasset.integration.api.codec.Encoder;
 import com.digitalasset.integration.internal.codec.metadata.DamlTypes.DamlType;
-import com.digitalasset.integration.internal.codec.metadata.XsdMetadata;
-import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XsdMetadata;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XsdMetadataReader;
 import com.digitalasset.integration.internal.codec.strategies.DomXsdEncodeStrategy;
 
 import java.io.IOException;

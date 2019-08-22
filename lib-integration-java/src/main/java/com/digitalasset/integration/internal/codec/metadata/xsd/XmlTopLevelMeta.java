@@ -1,7 +1,9 @@
 // Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
-package com.digitalasset.integration.internal.codec.metadata;
+package com.digitalasset.integration.internal.codec.metadata.xsd;
+
+import com.digitalasset.integration.internal.codec.metadata.DamlTypes;
 
 import java.util.List;
 import java.util.Map;

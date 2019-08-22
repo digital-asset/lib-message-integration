@@ -1,6 +1,3 @@
--- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
--- SPDX-License-Identifier: Apache-2.0
-
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
 
 -- | This module is an attempt to reverse engineer and parse the undocumented and very
@@ -49,6 +46,7 @@ rosettaSchema :: Parser Rosetta.Schema
 rosettaSchema =
     Rosetta.Schema
         <$> namespace
+        <*> version
         <*> many1 rosettaDecl
 
 rosettaDecl :: Parser Rosetta.Decl
@@ -68,9 +66,9 @@ rosettaClass =
         <$> option False (True <$ reserved "abstract")
         <*> (reserved "class" *> upperIdentifier)
         <*> optionMaybe (reserved "extends" *> upperIdentifier)
-        <*> (optional calculation *> (Set.fromList <$> P.sepBy classMeta comma))
+        <*> (optional calculation *> (Set.fromList <$> P.sepBy classMeta whiteSpace))
         <*> optionMaybe annotation <* skipMany synonym
-        <*> braces (many (classField <* semi <* skipMany synonym)) -- NB: some classes have no fields
+        <*> braces (many (classField <* optionMaybe semi <* skipMany synonym)) -- NB: some classes have no fields
 
 rosettaEnum :: Parser Rosetta.Enum
 rosettaEnum =
@@ -124,9 +122,7 @@ classField =
         <$> lowerIdentifier
         <*> optionMaybe identifier
         <*> cardinality
-        <*> option False (True <$ P.string "id" <* whiteSpace)
-        <*> (optional comma *> (Set.fromList <$> (P.many fieldMeta1)))
-        <*> (optional comma *> (Set.fromList <$> (P.many fieldMeta2)))
+        <*> (Set.fromList <$> (P.sepBy fieldMeta comma))
         <*> optionMaybe annotation
 
 enumField :: Parser Rosetta.EnumField
@@ -141,6 +137,10 @@ namespace :: Parser Rosetta.Namespace
 namespace =
     Rosetta.Namespace <$> (reserved "namespace" *> stringLiteral)
 
+version :: Parser Rosetta.Version
+version =
+    Rosetta.Version <$> (reserved "version" *> stringLiteral)
+
 -- we later skip the dubious calculation "keyword"
 calculation :: Parser [Rosetta.Identifier]
 calculation = (P.string "calculation" <* whiteSpace) *> P.sepBy1 identifier comma
@@ -151,19 +151,14 @@ style = reserved "style" *> (Rosetta.Style <$> identifier)
 classMeta :: Parser Rosetta.ClassMeta
 classMeta =
     Rosetta.COneOf <$ (P.string "one of" <* whiteSpace) <|>
-    Rosetta.CRosettaKey <$ reserved "rosettaKey"        <|>
+    Rosetta.CKey <$ reserved "key" <|>
     Rosetta.CRosettaKeyValue <$ reserved "rosettaKeyValue"
 
-fieldMeta1 :: Parser Rosetta.FieldMeta1
-fieldMeta1 =
-    Rosetta.FAnchor <$ reserved "anchor" <|>
-    Rosetta.FScheme <$ reserved "scheme"
-
-fieldMeta2 :: Parser Rosetta.FieldMeta2
-fieldMeta2 =
-    Rosetta.FRosettaKey <$ reserved "rosettaKey"           <|>
-    Rosetta.FRosettaKeyValue <$ reserved "rosettaKeyValue" <|>
-    Rosetta.FReference <$ reserved "reference"
+fieldMeta :: Parser Rosetta.FieldMeta
+fieldMeta =
+    Rosetta.FReference <$ reserved "reference" <|>
+    Rosetta.FScheme <$ reserved "scheme" <|>
+    Rosetta.FScheme <$ reserved "id"
 
 cardinality :: Parser Rosetta.Cardinality
 cardinality = parens $
@@ -260,6 +255,7 @@ semiSep = P.semiSep lexer
 semiSep1 = P.semiSep1 lexer
 commaSep = P.commaSep lexer
 commaSep1 = P.commaSep1 lexer
+
 
 ------------------------------------------------------------
 -- Testing

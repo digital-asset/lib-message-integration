@@ -38,7 +38,7 @@ genMetadata topMeta Module{..} =
                        , name <- maybeToList (getTypeName decl)
                        ]
 
-    genType' = genType env
+    genType' = fst . genType env
 
 instance ToJSON XmlMeta where
     toJSON (XmlElement name) = object [ "src" .= ("element"::Text), "name" .= qName name ]

@@ -23,17 +23,17 @@
         <dependency>
             <groupId>com.daml.ledger</groupId>
             <artifactId>bindings-java</artifactId>
-            <version>100.12.1</version>
+            <version>100.13.19</version>
         </dependency>
         <dependency>
             <groupId>com.daml.ledger</groupId>
             <artifactId>bindings-rxjava</artifactId>
-            <version>100.12.1</version>
+            <version>100.13.19</version>
         </dependency>
         <dependency>
             <groupId>com.digitalasset</groupId>
             <artifactId>daml-lf-archive</artifactId>
-            <version>100.12.1</version>
+            <version>100.13.19</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -75,6 +75,12 @@
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.8.5</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <version>2.6</version>
         </dependency>
 
         <!-- Test -->

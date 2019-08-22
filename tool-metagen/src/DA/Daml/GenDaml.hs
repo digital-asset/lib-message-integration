@@ -49,6 +49,12 @@ ppDecl (RecordType name fields comment) =
         $$ nest 4 (ppRecordFields fields
                   $$ nest 2 (text "deriving (Eq, Ord, Show)"))
 
+ppDecl (HigherRecordType name args fields comment) =
+    ppComment Before comment
+    $$ text "data" <+> text name <+> text (List.intercalate " " args) <+> text "=" <+> text name <+> text "with"
+        $$ nest 4 (ppRecordFields fields
+                  $$ nest 2 (text "deriving (Eq, Ord, Show)"))
+
 ppDecl (VariantType name fields comment)
     | not (null fields) =
       ppComment Before comment
@@ -91,6 +97,12 @@ ppType c k (Nominal name)   =
     applyCardinality c k $ text name
 ppType c k (Product fields) =
     applyCardinality c k $ ppTuple fields
+ppType c k (HigherKinded (name, types)) =
+  applyCardinality c k $ (if c == single || c == optional then parens else id) $ text name <+> List.foldl (\res t -> res <+> (pp t)) empty types
+  where
+    pp = \case
+      Left primType -> ppPrimType primType
+      Right name    -> text $ name
 ppType _ _ Enum    {}       = error "Anonymous enum types not currently supported"
 ppType _ _ Sum     {}       = error "Anonymous sum types not currently supported"
 

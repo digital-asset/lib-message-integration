@@ -15,6 +15,8 @@ import com.digitalasset.integration.api.codec.exceptions.CodecException;
 import com.digitalasset.integration.api.codec.strategies.DecodeStrategy;
 import com.digitalasset.integration.internal.codec.metadata.*;
 import com.digitalasset.integration.internal.codec.metadata.DamlTypes.DamlType;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XmlFieldMeta;
+import com.digitalasset.integration.internal.codec.metadata.xsd.XsdMetadata;
 import com.digitalasset.integration.internal.xml.QueryableXml;
 import com.google.common.base.Function;
 import io.vavr.*;

@@ -21,6 +21,7 @@ Executable metagen
                    DA.CDM.Rosetta.Metadata,
                    DA.CDM.Rosetta.Parse,
                    DA.CDM.Rosetta.Schema,
+                   DA.CDM.Rosetta.Static,
                    DA.Daml.GenDaml,
                    DA.Daml.TypeModel,
                    DA.Metagen.Metadata,

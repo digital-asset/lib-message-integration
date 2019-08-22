@@ -31,6 +31,12 @@ cabal new-run metagen -- [ARGS]
 cabal new-run metagen -- xsd -s ../lib-integration-java/src/main/resources/fpml/confirmation/fpml-main-5-10.xsd -n Confirmation -o ./target/ -p FpML.V510 -j v510
 ```
 
+### CDM
+
+```
+cabal new-run metagen -- cdm -d ../example/cdm_v2_0_136/common-domain-model -o ./target/ -p CDM.V2_0_136 -j v2_0_136
+```
+
 ## FAQ
 
 - How does the XSD translation work?

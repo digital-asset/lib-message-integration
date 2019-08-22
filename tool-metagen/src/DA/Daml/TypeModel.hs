@@ -13,9 +13,9 @@ import Control.Monad.Trans
 import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map
-import Data.Maybe
 
 type Name = String
+type ArgName = String
 
 newtype Comment = Comment { unComment :: Maybe String }
     deriving (Eq, Ord, Show)
@@ -39,16 +39,18 @@ data Import
 
 -- | Top-level declaration with optional field annotations.
 data Decl a
-    = EnumType      Name [(Name, a, Comment)] Comment
-    | RecordType    Name [Field a] Comment
-    | VariantType   Name [Field a] Comment
-    | NewType       Name (Type a) Comment
+    = EnumType          Name [(Name, a, Comment)] Comment
+    | RecordType        Name [Field a] Comment
+    | HigherRecordType  Name [ArgName] [Field a] Comment
+    | VariantType       Name [Field a] Comment
+    | NewType           Name (Type a) Comment
     | InlineComment String
     deriving (Eq, Show)
 
 getTypeName :: Decl a -> Maybe Name
 getTypeName (EnumType n _ _)    = Just n
 getTypeName (RecordType n _ _)  = Just n
+getTypeName (HigherRecordType n _ _ _) = Just n
 getTypeName (VariantType n _ _) = Just n
 getTypeName (NewType n _ _)     = Just n
 getTypeName _ = Nothing
@@ -66,11 +68,12 @@ data Field a = Field
 -- NOTE: Structural types are currently eliminated, but this decision may
 -- be revisted in some cases, e.g. simple pairs.
 data Type a
-    = Prim    PrimType             -- ^ primitive DAML-LF types
-    | Nominal Name                 -- ^ a reference to a record or variant declaration
-    | Product [Field a]            -- ^ structural product (currently not serialisable in DAML-LF)
-    | Sum     [Field a]            -- ^ structural sum (currently not serialisable in DAML-LF)
-    | Enum    [(Name, a, Comment)] -- ^ structural enum (a special case of sum)
+    = Prim    PrimType                              -- ^ primitive DAML-LF types
+    | Nominal Name                                  -- ^ a reference to a record or variant declaration
+    | Product [Field a]                             -- ^ structural product (currently not serialisable in DAML-LF)
+    | Sum     [Field a]                             -- ^ structural sum (currently not serialisable in DAML-LF)
+    | Enum    [(Name, a, Comment)]                  -- ^ structural enum (a special case of sum)
+    | HigherKinded (Name, [Either PrimType Name])  -- ^ a reference to a higher kinded type
     -- the following better supports models with inheritance such as
     -- XSD and CDM Rosetta.
     -- Extend  [Field a] (Type a)
@@ -120,7 +123,7 @@ applyCard c f =
 
 -- | Lift all local anonymous types to the top-level, name them using
 -- the enclosing type; and replace their definition with the a
--- reference to this name.  This is arguably easier for our users to
+-- reference to this name. This is arguably easier for our users to
 -- deal with than types such as tuples, "Either" or "OneOf3". Such
 -- anonymous types are also not (yet) supported by the integration
 -- adapter metadata.
@@ -145,8 +148,9 @@ typeLift inDecls =
         t <- doType enclT (field_name f) (field_type f)
         return $ f { field_type = t }
 
-    doType _ _ t@Prim{}     = return t
-    doType _ _ t@Nominal{}  = return t
+    doType _ _ t@Prim{}         = return t
+    doType _ _ t@Nominal{}      = return t
+    doType _ _ t@HigherKinded{} = return t
     doType enclT fn (Product fields) = do
         fields' <- mapM (doField enclT) fields
         let name = enclT <> "_" <> fn
@@ -216,6 +220,7 @@ renameFields recRename varRename = map decl
                   , field_type = types (field_type f) }
     types n@Prim{} = n
     types n@Nominal{} = n
+    types n@HigherKinded{} = n
     types (Sum fs) = Sum $ map (field varRename) fs
     types (Product fs) = Product $ map (field recRename) fs
     types (Enum cs) = Enum $ map (\(name,meta,comment) -> (varRename name,meta,comment)) cs
@@ -248,28 +253,28 @@ isNominal :: Field a -> Bool
 isNominal (field_type -> Nominal{}) = True
 isNominal _ = False
 
-gatherReferencedDecls :: Map String (Decl a) -> Name -> Map String (Decl a)
-gatherReferencedDecls allDecls topName =
-  case Map.lookup topName allDecls of
-      Nothing  -> mempty
-      Just d   -> go mempty d
-  where
-    go m d
-        | Just name <- getTypeName d
-        , name `Map.notMember` m =
-          let names = case d of
-                  (RecordType    _ fs _) -> fields fs
-                  (VariantType   _ fs _) -> fields fs
-                  --(ExtendType    _ _  fs1 fs2 _) -> fields fs1 <> fields fs2
-                  _ -> []
-              deps = mapMaybe (\n -> Map.lookup n allDecls) names
-          in List.foldl' go (Map.insert name d m) deps
-        | otherwise = m
+-- gatherReferencedDecls :: Map String (Decl a) -> Name -> Map String (Decl a)
+-- gatherReferencedDecls allDecls topName =
+--   case Map.lookup topName allDecls of
+--       Nothing  -> mempty
+--       Just d   -> go mempty d
+--   where
+--     go m d
+--         | Just name <- getTypeName d
+--         , name `Map.notMember` m =
+--           let names = case d of
+--                   (RecordType    _ fs _) -> fields fs
+--                   (VariantType   _ fs _) -> fields fs
+--                   --(ExtendType    _ _  fs1 fs2 _) -> fields fs1 <> fields fs2
+--                   _ -> []
+--               deps = mapMaybe (\n -> Map.lookup n allDecls) names
+--           in List.foldl' go (Map.insert name d m) deps
+--         | otherwise = m
 
-    fields fs = concatMap field fs
-    field Field{..} = types field_type
-    types (Prim _) = []
-    types (Enum _) = []
-    types (Nominal n) = [n]
-    types (Sum fs) = fields fs
-    types (Product fs) = fields fs
+--     fields fs = concatMap field fs
+--     field Field{..} = types field_type
+--     types (Prim _) = []
+--     types (Enum _) = []
+--     types (Nominal n) = [n]
+--     types (Sum fs) = fields fs
+--     types (Product fs) = fields fs
