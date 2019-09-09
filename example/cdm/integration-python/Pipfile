@@ -7,8 +7,10 @@ name = "pypi"
 pylint = "*"
 
 [packages]
-python-dateutil = "*"
 dictdiffer = "*"
+message_integration = {path = "./libs/message_integration-0.0.1-py3-none-any.whl"}
+python-dateutil = "*"
+requests = "*"
 
 [requires]
 python_version = "3.7"

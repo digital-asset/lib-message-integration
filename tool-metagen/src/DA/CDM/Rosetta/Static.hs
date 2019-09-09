@@ -3,9 +3,9 @@ module DA.CDM.Rosetta.Static where
 import qualified DA.Daml.TypeModel     as Model
 import           DA.CDM.Rosetta.Convert (Conv, CdmMeta(..))
 
-moduleMetaClasses :: Conv (Model.Module CdmMeta)
-moduleMetaClasses = return Model.Module
-      { module_name = "MetaClasses"
+moduleMetaClasses :: String -> Conv (Model.Module CdmMeta)
+moduleMetaClasses moduleName = return Model.Module
+      { module_name = moduleName
       , module_imports = []
       , module_decls =
         [ Model.HigherRecordType

@@ -134,12 +134,9 @@ convClass cls = do
     toTypeModel Class{..} =
         Model.RecordType name fields comment
       where
-        fields  = map convClassField $ filter (not . zeroCard) classFields
+        fields  = map convClassField classFields
         name    = convClassName className
         comment = convAnnotation classAnnotation
-
-        zeroCard :: ClassField -> Bool
-        zeroCard cf = classFieldCard cf == Cardinality 0 (Bounded 0)
 
 convClassField :: ClassField -> Model.Field CdmMeta
 convClassField ClassField{..} =
@@ -234,6 +231,7 @@ convCardinality (Cardinality lower upper) =
   where
     f 0 = Model.Zero
     f _ = Model.One
+    g (Bounded 0) = Model.ToMany -- TODO: introduce zero
     g (Bounded 1) = Model.ToOne
     g (Bounded _) = Model.ToMany
     g Unbounded   = Model.ToMany

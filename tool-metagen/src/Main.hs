@@ -82,6 +82,7 @@ optParser = Options
         ( long "json-package"
         <> short 'j'
         <> metavar "JSON-PACKAGE"
+        <> value ""
         <> help "package name for Json output target" )
     <*> option readLogLevel
             (long "log-level"
@@ -195,17 +196,19 @@ runRosetta Options{..} baseDir = do
 
     let schemaEnums = Rosetta.Schema
             { schemaNamespace = head $ map Rosetta.schemaNamespace schemas -- TODO
+            , schemaVersion   = head $ map Rosetta.schemaVersion schemas
             , schemaDecls     = [ e | e@Rosetta.EnumDecl{} <- concatMap Rosetta.schemaDecls schemas ]
             }
     let moduleEnums = Rosetta.convert (optDamlPackage ++ "." ++ "Enums") schemaEnums
 
     let schemaClasses = Rosetta.Schema
             { schemaNamespace = head $ map Rosetta.schemaNamespace schemas -- TODO
+            , schemaVersion   = head $ map Rosetta.schemaVersion schemas
             , schemaDecls     = [ c | c@Rosetta.ClassDecl{} <- concatMap Rosetta.schemaDecls schemas ]
             }
     let moduleClasses = Rosetta.convert (optDamlPackage ++ "." ++ "Classes") schemaClasses
 
-    let moduleMetaClasses = Rosetta.moduleMetaClasses
+    let moduleMetaClasses = Rosetta.moduleMetaClasses  (optDamlPackage ++ ".MetaClasses")
 
     let env = Rosetta.mkEnv schemaEnums <>
               Rosetta.mkEnv schemaClasses
@@ -218,7 +221,7 @@ runRosetta Options{..} baseDir = do
 
     -- For DAML, split into two files (as we have always done so far)
     writeDaml' "Enums" [] env moduleEnums
-    writeDaml' "Classes" [Unqualified $ optDamlPackage++".Enums"] env moduleClasses
+    writeDaml' "Classes" [Unqualified $ optDamlPackage++".Enums", Unqualified $ optDamlPackage++".MetaClasses", Unqualified $ "Prelude hiding (Party)"] env moduleClasses
     writeDaml' "MetaClasses" [] env moduleMetaClasses
 
     -- For Json metadata, just emit one file.
@@ -227,7 +230,7 @@ runRosetta Options{..} baseDir = do
         modClasses <- moduleClasses
         modMetaClasses <- moduleMetaClasses
         return Module
-            { module_name = "CDM"
+            { module_name = "CDM_" ++ (Rosetta.unVersion . Rosetta.schemaVersion) schemaClasses
             , module_imports = []
             , module_decls = List.concatMap module_decls [modEnums, modClasses, modMetaClasses]
             , module_comment = noComment

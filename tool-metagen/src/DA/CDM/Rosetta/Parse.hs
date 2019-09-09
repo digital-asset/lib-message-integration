@@ -14,7 +14,7 @@ import Control.Applicative
 import qualified DA.CDM.Rosetta.Schema as Rosetta
 
 import Text.Parsec ( many1, choice, skipMany, skipMany1, option
-                   , optionMaybe, oneOf, noneOf )
+                   , optionMaybe, oneOf, noneOf, try, string )
 import Text.Parsec.Indent
 import Text.Parsec.Indent.Explicit
 import Text.Parsec.Indent.Internal

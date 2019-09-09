@@ -22,7 +22,7 @@ ppModule Module{..} =
         $$ ppDecls module_decls
 
 ppImports :: [Import] -> Doc
-ppImports = vcat . List.intersperse (text "") . map ppImport
+ppImports = vcat . map ppImport
   where
     ppImport (Unqualified modu) =
         text "import" <+> text modu
@@ -40,7 +40,7 @@ ppDecl (EnumType name constrs comment) =
         $$ nest 4 (ppBlock "=" "|" "deriving (Eq, Ord, Show)" ppConstr constrs)
   where
     ppConstr (cname, _, comment')
-        = (text name <> text "_" <> text cname <> text " ()")
+        = (text name <> text "_" <> text cname <> if length constrs == 1 then text " ()" else "")
               $$ ppComment After comment'
 
 ppDecl (RecordType name fields comment) =

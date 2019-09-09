@@ -1,35 +1,30 @@
-# import dazl
-# from dazl.model.reading import ReadyEvent
 import json
 import os
-from collections import namedtuple
-from lib.metadata.cdm.cdmMetaDataReader import CdmMetaDataReader
-from lib.metadata.damlTypes import DamlType, Record
-from lib.strategies.jsonCdmDecodeStrategy import JsonCdmDecodeStrategy
-from lib.strategies.jsonCdmEncodeStrategy import JsonCdmEncodeStrategy
-import asyncio
 from dictdiffer import diff
 import requests
 
-if __name__ == '__main__':
-  direcotry = '../example/cdm/'
+from message_integration.metadata.cdm.cdmMetaDataReader import CdmMetaDataReader
+from message_integration.metadata.damlTypes import DamlType, Record
+from message_integration.strategies.jsonCdmDecodeStrategy import JsonCdmDecodeStrategy
+from message_integration.strategies.jsonCdmEncodeStrategy import JsonCdmEncodeStrategy
 
-  with open(direcotry + 'metadata/CDM.json') as metadataRaw:
+if __name__ == '__main__':
+  with open('../metadata/CDM.json') as metadataRaw:
 
     metadata = CdmMetaDataReader().fromJSON(json.load(metadataRaw))
 
     urlCreate = "http://localhost:7575/command/create"
     urlSearch = "http://localhost:7575/contracts/search"
-    headers = {"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsZWRnZXJJZCI6InNhbmRib3gtNzAzZGFlMzYtYmFmZi00ZmE1LWFhZDYtYmJmMzFkMTRlOTdmIiwiYXBwbGljYXRpb25JZCI6IkNkbVRlc3QiLCJwYXJ0eSI6IlRlc3RlciJ9.kImpUYIZauvUag634t8cs8oiH0GVFFKBlZdH0WMhGhg"}
+    headers = {"Content-Type": "application/json", "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJsZWRnZXJJZCI6Ik15VGVzdExlZGdlciIsImFwcGxpY2F0aW9uSWQiOiJDZG1UZXN0IiwicGFydHkiOiJUZXN0ZXIifQ.tHhViFI_0P3aLUeij9Es3eE1muNFFtkF8HnkFeQK91E"}
 
-    for filename in os.listdir(direcotry + 'examples'):
+    for filename in os.listdir('../examples'):
       if filename.endswith("json"):
-        with open(direcotry + 'examples/' + filename) as inJson:
+        with open('../examples/' + filename) as inJson:
           # Decode json to match http-json-api
           inJsonDict = json.load(inJson)
           e = JsonCdmDecodeStrategy(metadata).decode(inJsonDict, Record("Event"))
 
-          # Create Contract and get resulting contract id
+          # Create contract and get resulting contract id
           arg = { "templateId": {
                     "moduleName": "Main",
                     "entityName": "EventInstance"
@@ -46,7 +41,7 @@ if __name__ == '__main__':
           else:
             contractId = resJson["result"]["contractId"]
 
-            # Get event from created contract
+            # Get contract via contract id
             arg = { "templateIds": [{
                         "moduleName": "Main",
                         "entityName": "EventInstance"
