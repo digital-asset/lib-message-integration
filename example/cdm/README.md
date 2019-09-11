@@ -6,11 +6,11 @@ This is a small example to illustrate how to load and retrieve CDM messages to a
 
 1. Build the DAML model by running
 
-      daml build
+        daml build
 
 2. Build the python application by running
 
-      (cd integration-python; pipenv install libs/message_integration-0.0.1-py3-none-any.whl)
+        (cd integration-python; pipenv install libs/message_integration-0.0.1-py3-none-any.whl)
 
 ## How to start
 
@@ -18,11 +18,11 @@ Start each of the following commands in a separate shell.
 
 1. Start the sandbox via
 
-      daml sandbox .daml/dist/cdmIntro.dar -w --ledgerid "MyTestLedger"
+        daml sandbox .daml/dist/cdmIntro-0.0.1.dar -w --ledgerid "MyTestLedger"
 
 2. Start the Http-Json-Api via
 
-      TBA
+        daml json-api --ledger-host localhost --ledger-port 6865 --http-port 7575 --max-inbound-message-size 52428800
 
 ## How to use
 

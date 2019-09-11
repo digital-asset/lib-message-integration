@@ -1,4 +1,4 @@
-sdk-version: 0.13.19
+sdk-version: 0.13.23
 name: cdmIntro
 source: daml/Main.daml
 scenario: Main:setup

@@ -42,7 +42,7 @@ if __name__ == '__main__':
             contractId = resJson["result"]["contractId"]
 
             # Get contract via contract id
-            arg = { "templateIds": [{
+            arg = { "%templates": [{
                         "moduleName": "Main",
                         "entityName": "EventInstance"
                       }]
