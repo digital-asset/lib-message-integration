@@ -252,6 +252,7 @@ runRosetta Options{..} baseDir = do
                 , "model-cdm-event-functions.rosetta"
                 , "model-cdm-function-event-primitive.rosetta"
                 , "model-reg-reporting.rosetta"
+                , "model-cdm-aliases.rosetta"
                 ]
 
 

@@ -1,7 +1,7 @@
 {
     "metagen_version": "0.1",
     "format": "CDM",
-    "schema": "CDM_2.2.6",
+    "schema": "CDM_2.4.7",
     "top_level_meta": [],
     "declarations": [
         {
@@ -121,6 +121,36 @@
                     "cardinality": "SINGLE",
                     "meta": {
                         "name": "Other",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                }
+            ]
+        },
+        {
+            "kind": "variant",
+            "name": "AffirmationStatusEnum",
+            "fields": [
+                {
+                    "name": "AffirmationStatusEnum_Affirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Affirmed",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                },
+                {
+                    "name": "AffirmationStatusEnum_Unaffirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Unaffirmed",
                         "src": "enum"
                     },
                     "type": {
@@ -6739,6 +6769,36 @@
                     "cardinality": "SINGLE",
                     "meta": {
                         "name": "Straight",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                }
+            ]
+        },
+        {
+            "kind": "variant",
+            "name": "ConfirmationStatusEnum",
+            "fields": [
+                {
+                    "name": "ConfirmationStatusEnum_Confirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Confirmed",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                },
+                {
+                    "name": "ConfirmationStatusEnum_Unconfirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Unconfirmed",
                         "src": "enum"
                     },
                     "type": {
@@ -24105,6 +24165,18 @@
                     }
                 },
                 {
+                    "name": "WorkflowStatusEnum_Affirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Affirmed",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                },
+                {
                     "name": "WorkflowStatusEnum_Alleged",
                     "cardinality": "SINGLE",
                     "meta": {
@@ -24157,6 +24229,18 @@
                     "cardinality": "SINGLE",
                     "meta": {
                         "name": "Cleared",
+                        "src": "enum"
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "UNIT"
+                    }
+                },
+                {
+                    "name": "WorkflowStatusEnum_Confirmed",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "Confirmed",
                         "src": "enum"
                     },
                     "type": {
@@ -25676,6 +25760,77 @@
         },
         {
             "kind": "record",
+            "name": "Affirmation",
+            "fields": [
+                {
+                    "name": "identifier",
+                    "cardinality": "MANY1",
+                    "meta": {
+                        "name": "identifier",
+                        "src": "field",
+                        "type": "Identifier"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "Identifier"
+                    }
+                },
+                {
+                    "name": "lineage",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "lineage",
+                        "src": "field",
+                        "type": "Lineage"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "Lineage"
+                    }
+                },
+                {
+                    "name": "party",
+                    "cardinality": "MANY1",
+                    "meta": {
+                        "name": "party",
+                        "src": "field",
+                        "type": "Party"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "Party"
+                    }
+                },
+                {
+                    "name": "partyRole",
+                    "cardinality": "MANY1",
+                    "meta": {
+                        "name": "partyRole",
+                        "src": "field",
+                        "type": "PartyRole"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "PartyRole"
+                    }
+                },
+                {
+                    "name": "status",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "status",
+                        "src": "field",
+                        "type": "AffirmationStatusEnum"
+                    },
+                    "type": {
+                        "kind": "variant",
+                        "name": "AffirmationStatusEnum"
+                    }
+                }
+            ]
+        },
+        {
+            "kind": "record",
             "name": "AggregationParameters",
             "fields": [
                 {
@@ -25692,6 +25847,32 @@
                     }
                 },
                 {
+                    "name": "dateTime",
+                    "cardinality": "SINGLE",
+                    "meta": {
+                        "name": "dateTime",
+                        "src": "field",
+                        "type": "zonedDateTime"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "ZonedDateTime"
+                    }
+                },
+                {
+                    "name": "executionReference",
+                    "cardinality": "MANY",
+                    "meta": {
+                        "name": "executionReference",
+                        "src": "field",
+                        "type": "Execution"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "ReferenceWithMeta_Execution"
+                    }
+                },
+                {
                     "name": "party",
                     "cardinality": "MANY",
                     "meta": {
@@ -25705,16 +25886,29 @@
                     }
                 },
                 {
-                    "name": "partyRole",
+                    "name": "positionStatus",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "positionStatus",
+                        "src": "field",
+                        "type": "PositionStatusEnum"
+                    },
+                    "type": {
+                        "kind": "variant",
+                        "name": "PositionStatusEnum"
+                    }
+                },
+                {
+                    "name": "product",
                     "cardinality": "MANY",
                     "meta": {
-                        "name": "partyRole",
+                        "name": "product",
                         "src": "field",
-                        "type": "PartyRole"
+                        "type": "Product"
                     },
                     "type": {
                         "kind": "record",
-                        "name": "PartyRole"
+                        "name": "Product"
                     }
                 },
                 {
@@ -25731,29 +25925,16 @@
                     }
                 },
                 {
-                    "name": "settlementTerms",
-                    "cardinality": "MANY",
-                    "meta": {
-                        "name": "settlementTerms",
-                        "src": "field",
-                        "type": "SettlementTerms"
-                    },
-                    "type": {
-                        "kind": "record",
-                        "name": "SettlementTerms"
-                    }
-                },
-                {
-                    "name": "tradeDate",
+                    "name": "totalPosition",
                     "cardinality": "OPTIONAL",
                     "meta": {
-                        "name": "tradeDate",
+                        "name": "totalPosition",
                         "src": "field",
-                        "type": "date"
+                        "type": "boolean"
                     },
                     "type": {
                         "kind": "prim",
-                        "name": "DATE"
+                        "name": "BOOL"
                     }
                 }
             ]
@@ -25799,6 +25980,64 @@
                     "type": {
                         "kind": "record",
                         "name": "Contract"
+                    }
+                },
+                {
+                    "name": "meta",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "meta",
+                        "src": "field",
+                        "type": null
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "MetaFields"
+                    }
+                }
+            ]
+        },
+        {
+            "kind": "record",
+            "name": "ReferenceWithMeta_Execution",
+            "fields": [
+                {
+                    "name": "globalReference",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "globalReference",
+                        "src": "field",
+                        "type": null
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "TEXT"
+                    }
+                },
+                {
+                    "name": "externalReference",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "externalReference",
+                        "src": "field",
+                        "type": null
+                    },
+                    "type": {
+                        "kind": "prim",
+                        "name": "TEXT"
+                    }
+                },
+                {
+                    "name": "value",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "value",
+                        "src": "field",
+                        "type": null
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "Execution"
                     }
                 },
                 {
@@ -30016,19 +30255,6 @@
             "name": "Confirmation",
             "fields": [
                 {
-                    "name": "execution",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "execution",
-                        "src": "field",
-                        "type": "Execution"
-                    },
-                    "type": {
-                        "kind": "record",
-                        "name": "ReferenceWithMeta_Execution"
-                    }
-                },
-                {
                     "name": "identifier",
                     "cardinality": "MANY1",
                     "meta": {
@@ -30042,8 +30268,21 @@
                     }
                 },
                 {
+                    "name": "lineage",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "lineage",
+                        "src": "field",
+                        "type": "Lineage"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "Lineage"
+                    }
+                },
+                {
                     "name": "party",
-                    "cardinality": "MANY",
+                    "cardinality": "MANY1",
                     "meta": {
                         "name": "party",
                         "src": "field",
@@ -30056,7 +30295,7 @@
                 },
                 {
                     "name": "partyRole",
-                    "cardinality": "MANY",
+                    "cardinality": "MANY1",
                     "meta": {
                         "name": "partyRole",
                         "src": "field",
@@ -30066,63 +30305,18 @@
                         "kind": "record",
                         "name": "PartyRole"
                     }
-                }
-            ]
-        },
-        {
-            "kind": "record",
-            "name": "ReferenceWithMeta_Execution",
-            "fields": [
-                {
-                    "name": "globalReference",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "globalReference",
-                        "src": "field",
-                        "type": null
-                    },
-                    "type": {
-                        "kind": "prim",
-                        "name": "TEXT"
-                    }
                 },
                 {
-                    "name": "externalReference",
-                    "cardinality": "OPTIONAL",
+                    "name": "status",
+                    "cardinality": "SINGLE",
                     "meta": {
-                        "name": "externalReference",
+                        "name": "status",
                         "src": "field",
-                        "type": null
+                        "type": "ConfirmationStatusEnum"
                     },
                     "type": {
-                        "kind": "prim",
-                        "name": "TEXT"
-                    }
-                },
-                {
-                    "name": "value",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "value",
-                        "src": "field",
-                        "type": null
-                    },
-                    "type": {
-                        "kind": "record",
-                        "name": "Execution"
-                    }
-                },
-                {
-                    "name": "meta",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "meta",
-                        "src": "field",
-                        "type": null
-                    },
-                    "type": {
-                        "kind": "record",
-                        "name": "MetaFields"
+                        "kind": "variant",
+                        "name": "ConfirmationStatusEnum"
                     }
                 }
             ]
@@ -30718,19 +30912,6 @@
                     }
                 },
                 {
-                    "name": "notionalAdjustments",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "notionalAdjustments",
-                        "src": "field",
-                        "type": "NotionalAdjustmentEnum"
-                    },
-                    "type": {
-                        "kind": "variant",
-                        "name": "NotionalAdjustmentEnum"
-                    }
-                },
-                {
                     "name": "notionalAmount",
                     "cardinality": "OPTIONAL",
                     "meta": {
@@ -30741,19 +30922,6 @@
                     "type": {
                         "kind": "record",
                         "name": "ReferenceWithMeta_Money"
-                    }
-                },
-                {
-                    "name": "notionalReset",
-                    "cardinality": "OPTIONAL",
-                    "meta": {
-                        "name": "notionalReset",
-                        "src": "field",
-                        "type": "boolean"
-                    },
-                    "type": {
-                        "kind": "prim",
-                        "name": "BOOL"
                     }
                 },
                 {
@@ -37590,7 +37758,7 @@
                 },
                 {
                     "name": "workflowStatus",
-                    "cardinality": "OPTIONAL",
+                    "cardinality": "MANY",
                     "meta": {
                         "name": "workflowStatus",
                         "src": "field",
@@ -37740,6 +37908,19 @@
                     "type": {
                         "kind": "record",
                         "name": "ClosedState"
+                    }
+                },
+                {
+                    "name": "executionQuantity",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "executionQuantity",
+                        "src": "field",
+                        "type": "ExecutionQuantity"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "ExecutionQuantity"
                     }
                 },
                 {
@@ -43282,6 +43463,19 @@
                     }
                 },
                 {
+                    "name": "executionReference",
+                    "cardinality": "MANY",
+                    "meta": {
+                        "name": "executionReference",
+                        "src": "field",
+                        "type": "Execution"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "ReferenceWithMeta_Execution"
+                    }
+                },
+                {
                     "name": "interestRatePayoutReference",
                     "cardinality": "MANY",
                     "meta": {
@@ -45387,16 +45581,16 @@
                     }
                 },
                 {
-                    "name": "step",
-                    "cardinality": "MANY",
+                    "name": "stepSchedule",
+                    "cardinality": "OPTIONAL",
                     "meta": {
-                        "name": "step",
+                        "name": "stepSchedule",
                         "src": "field",
-                        "type": "NonNegativeStep"
+                        "type": "NonNegativeStepSchedule"
                     },
                     "type": {
                         "kind": "record",
-                        "name": "NonNegativeStep"
+                        "name": "NonNegativeStepSchedule"
                     }
                 },
                 {
@@ -45500,6 +45694,25 @@
                     "type": {
                         "kind": "prim",
                         "name": "DECIMAL"
+                    }
+                }
+            ]
+        },
+        {
+            "kind": "record",
+            "name": "NonNegativeStepSchedule",
+            "fields": [
+                {
+                    "name": "step",
+                    "cardinality": "MANY1",
+                    "meta": {
+                        "name": "step",
+                        "src": "field",
+                        "type": "NonNegativeStep"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "NonNegativeStep"
                     }
                 }
             ]
@@ -46868,6 +47081,19 @@
                     "type": {
                         "kind": "variant",
                         "name": "SettlementTypeEnum"
+                    }
+                },
+                {
+                    "name": "transferSettlementType",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "transferSettlementType",
+                        "src": "field",
+                        "type": "TransferSettlementEnum"
+                    },
+                    "type": {
+                        "kind": "variant",
+                        "name": "TransferSettlementEnum"
                     }
                 },
                 {
@@ -48593,6 +48819,19 @@
                     "type": {
                         "kind": "record",
                         "name": "Cashflow"
+                    }
+                },
+                {
+                    "name": "contractualQuantity",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "contractualQuantity",
+                        "src": "field",
+                        "type": "ExecutionQuantity"
+                    },
+                    "type": {
+                        "kind": "record",
+                        "name": "ExecutionQuantity"
                     }
                 },
                 {
@@ -53359,6 +53598,19 @@
                     "type": {
                         "kind": "variant",
                         "name": "SettlementTypeEnum"
+                    }
+                },
+                {
+                    "name": "transferSettlementType",
+                    "cardinality": "OPTIONAL",
+                    "meta": {
+                        "name": "transferSettlementType",
+                        "src": "field",
+                        "type": "TransferSettlementEnum"
+                    },
+                    "type": {
+                        "kind": "variant",
+                        "name": "TransferSettlementEnum"
                     }
                 },
                 {

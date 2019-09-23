@@ -4,6 +4,8 @@ from ..metadata.metaData import MetaData
 from ..metadata.cdm.cdmFieldMeta import CdmFieldMeta, CdmField
 from ..metadata.fieldMetaData import FieldMetaData, Cardinality
 from ..metadata.damlTypes import *
+from dateutil.parser import parse
+from datetime import date
 
 @dataclass(frozen=True)
 class JsonCdmEncodeStrategy():
@@ -101,5 +103,8 @@ class JsonCdmEncodeStrategy():
       return int(elem)
     elif prim.prim == Primitive.DECIMAL:
       return float(elem)
+    elif prim.prim == Primitive.DATE:
+      date = parse(elem)
+      return {'year': date.year, 'month': date.month, 'day': date.day}
     else:
       return elem

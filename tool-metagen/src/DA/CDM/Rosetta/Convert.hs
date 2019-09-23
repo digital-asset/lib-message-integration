@@ -51,6 +51,7 @@ declIdentifier (ChoiceRuleDecl cr) = choiceRuleName cr
 declIdentifier (IsEventDecl isE) = isEventIdent isE
 declIdentifier (IsProductDecl isP) = isProductIdent isP
 declIdentifier (AliasDecl a) = aliasIdent a
+declIdentifier (SpecDecl s) = specIdent s
 
 mkEnv :: Schema -> Env
 mkEnv (sortSchema -> Schema{..}) = foldl' decl mempty schemaDecls

@@ -1,5 +1,5 @@
 namespace "org.isda.cdm"
-version "2.2.6"
+version "2.4.7"
 
 /*
  * Variation Margin Mark to Market Calculation 
@@ -24,11 +24,11 @@ func FxMarkToMarket : <"Representation of sample mark to market calculation prov
     alias quotedQuantity: <"The amount of the quoted currency.">
             if forwardFX -> exchangeRate -> quotedCurrencyPair -> quoteBasis = QuoteBasisEnum.Currency2PerCurrency1 
             then forwardFX -> exchangedCurrency2 -> cashflowAmount -> amount 
-            else forwardFX -> exchangedCurrency1 -> cashflowAmount -> amount;
+            else forwardFX -> exchangedCurrency1 -> cashflowAmount -> amount
     alias baseQuantity: <"The amount of the base currency.">
             if forwardFX -> exchangeRate -> quotedCurrencyPair -> quoteBasis = QuoteBasisEnum.Currency2PerCurrency1 
             then forwardFX  -> exchangedCurrency1 -> cashflowAmount -> amount 
-            else forwardFX -> exchangedCurrency2 -> cashflowAmount -> amount;
+            else forwardFX -> exchangedCurrency2 -> cashflowAmount -> amount
     alias interpolatedRate:
             InterpolateForwardRate( forwardPayout)
     assign-output value :

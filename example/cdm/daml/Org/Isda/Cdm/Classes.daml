@@ -143,13 +143,23 @@ data AdjustedRelativeDateOffset = AdjustedRelativeDateOffset with
     relativeDateAdjustments : Optional BusinessDayAdjustments
       deriving (Eq, Ord, Show)
 
+data Affirmation = Affirmation with
+    identifier : [Identifier]
+    lineage : Optional Lineage
+    party : [Party]
+    partyRole : [PartyRole]
+    status : AffirmationStatusEnum
+      deriving (Eq, Ord, Show)
+
 data AggregationParameters = AggregationParameters with
     contractReference : [ReferenceWithMeta Contract]
+    dateTime : ZonedDateTime
+    executionReference : [ReferenceWithMeta Execution]
     party : [ReferenceWithMeta Party]
-    partyRole : [PartyRole]
+    positionStatus : Optional PositionStatusEnum
+    product : [Product]
     productQualifier : [Text]
-    settlementTerms : [SettlementTerms]
-    tradeDate : Optional Date
+    totalPosition : Optional Bool
       deriving (Eq, Ord, Show)
 
 data AllocationBreakdown = AllocationBreakdown with
@@ -662,10 +672,11 @@ data ConditionsPrecedent = ConditionsPrecedent with
       deriving (Eq, Ord, Show)
 
 data Confirmation = Confirmation with
-    execution : Optional (ReferenceWithMeta Execution)
     identifier : [Identifier]
+    lineage : Optional Lineage
     party : [Party]
     partyRole : [PartyRole]
+    status : ConfirmationStatusEnum
       deriving (Eq, Ord, Show)
 
 data ConstituentWeight = ConstituentWeight with
@@ -727,9 +738,7 @@ data ContractualProduct = ContractualProduct with
 data ContractualQuantity = ContractualQuantity with
     futureValueNotional : Optional FutureValueAmount
     fxLinkedNotional : Optional FxLinkedNotionalSchedule
-    notionalAdjustments : Optional NotionalAdjustmentEnum
     notionalAmount : Optional (ReferenceWithMeta Money)
-    notionalReset : Optional Bool
     notionalSchedule : Optional NotionalSchedule
     quantity : Optional Quantity
       deriving (Eq, Ord, Show)
@@ -1400,7 +1409,7 @@ data EventTimestamp = EventTimestamp with
 data EventWorkflow = EventWorkflow with
     comment : Optional Text
     partyCustomisedWorkflow : [PartyCustomisedWorkflow]
-    workflowStatus : Optional WorkflowStatusEnum
+    workflowStatus : [WorkflowStatusEnum]
       deriving (Eq, Ord, Show)
 
 data ExchangeRate = ExchangeRate with
@@ -1422,6 +1431,7 @@ data ExctgPrsn = ExctgPrsn with
 
 data Execution = Execution with
     closedState : Optional ClosedState
+    executionQuantity : Optional ExecutionQuantity
     executionType : ExecutionTypeEnum
     executionVenue : Optional LegalEntity
     identifier : [Identifier]
@@ -2018,6 +2028,7 @@ data Lineage = Lineage with
     creditDefaultPayoutReference : [ReferenceWithMeta CreditDefaultPayout]
     equityPayoutReference : [ReferenceWithMeta EquityPayout]
     eventReference : [ReferenceWithMeta Event]
+    executionReference : [ReferenceWithMeta Execution]
     interestRatePayoutReference : [ReferenceWithMeta InterestRatePayout]
     legalAgreement : [ReferenceWithMeta LegalAgreement]
     optionPayoutReference : [ReferenceWithMeta OptionPayout]
@@ -2205,7 +2216,7 @@ data NonNegativeQuantity = NonNegativeQuantity with
 data NonNegativeQuantitySchedule = NonNegativeQuantitySchedule with
     amount : Decimal
     currency : Optional (FieldWithMeta Text)
-    step : [NonNegativeStep]
+    stepSchedule : Optional NonNegativeStepSchedule
     unit : Optional UnitEnum
       deriving (Eq, Ord, Show)
 
@@ -2219,6 +2230,10 @@ data NonNegativeStep = NonNegativeStep with
     meta : Optional MetaFields
     stepDate : Date
     stepValue : Decimal
+      deriving (Eq, Ord, Show)
+
+data NonNegativeStepSchedule = NonNegativeStepSchedule with
+    step : [NonNegativeStep]
       deriving (Eq, Ord, Show)
 
 data NotDomesticCurrency = NotDomesticCurrency with
@@ -2368,6 +2383,7 @@ data OptionSettlement = OptionSettlement with
     settlementCurrency : Optional (FieldWithMeta Text)
     settlementDate : Optional AdjustableOrRelativeDate
     settlementType : Optional SettlementTypeEnum
+    transferSettlementType : Optional TransferSettlementEnum
     valueDate : Optional Date
       deriving (Eq, Ord, Show)
 
@@ -2570,6 +2586,7 @@ data Period = Period with
 
 data PhysicalExercise = PhysicalExercise with
     cashflow : Optional Cashflow
+    contractualQuantity : Optional ExecutionQuantity
     product : Product
     quantity : Optional Quantity
       deriving (Eq, Ord, Show)
@@ -3093,6 +3110,7 @@ data SettlementTerms = SettlementTerms with
     settlementCurrency : Optional (FieldWithMeta Text)
     settlementDate : Optional AdjustableOrRelativeDate
     settlementType : Optional SettlementTypeEnum
+    transferSettlementType : Optional TransferSettlementEnum
     valueDate : Optional Date
       deriving (Eq, Ord, Show)
 

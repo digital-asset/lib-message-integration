@@ -4,7 +4,7 @@ from dictdiffer import diff
 import requests
 
 from message_integration.metadata.cdm.cdmMetaDataReader import CdmMetaDataReader
-from message_integration.metadata.damlTypes import DamlType, Record
+from message_integration.metadata.damlTypes import Record
 from message_integration.strategies.jsonCdmDecodeStrategy import JsonCdmDecodeStrategy
 from message_integration.strategies.jsonCdmEncodeStrategy import JsonCdmEncodeStrategy
 

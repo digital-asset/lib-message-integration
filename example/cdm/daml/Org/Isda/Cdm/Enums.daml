@@ -22,6 +22,11 @@ data AdditionalTypeEnum
     | AdditionalTypeEnum_Other
     deriving (Eq, Ord, Show)
 
+data AffirmationStatusEnum
+    = AffirmationStatusEnum_Affirmed
+    | AffirmationStatusEnum_Unaffirmed
+    deriving (Eq, Ord, Show)
+
 data AmendmentEffectiveDateEnum
     = AmendmentEffectiveDateEnum_AnnexDate ()
     deriving (Eq, Ord, Show)
@@ -609,6 +614,11 @@ data CompoundingMethodEnum
     | CompoundingMethodEnum_None
     | CompoundingMethodEnum_SpreadExclusive
     | CompoundingMethodEnum_Straight
+    deriving (Eq, Ord, Show)
+
+data ConfirmationStatusEnum
+    = ConfirmationStatusEnum_Confirmed
+    | ConfirmationStatusEnum_Unconfirmed
     deriving (Eq, Ord, Show)
 
 data ContractualDefinitionsEnum
@@ -2313,11 +2323,13 @@ data WeeklyRollConventionEnum
 
 data WorkflowStatusEnum
     = WorkflowStatusEnum_Accepted
+    | WorkflowStatusEnum_Affirmed
     | WorkflowStatusEnum_Alleged
     | WorkflowStatusEnum_Amended
     | WorkflowStatusEnum_Cancelled
     | WorkflowStatusEnum_Certain
     | WorkflowStatusEnum_Cleared
+    | WorkflowStatusEnum_Confirmed
     | WorkflowStatusEnum_Pending
     | WorkflowStatusEnum_Rejected
     | WorkflowStatusEnum_Submitted

@@ -26,6 +26,7 @@ data Decl
     | IsEventDecl     IsEvent
     | IsProductDecl   IsProduct
     | AliasDecl       Alias
+    | SpecDecl        Spec
     deriving Show
 
 data Enum = Enum
@@ -72,6 +73,12 @@ data IsProduct = IsProduct
 data Alias = Alias
     { aliasIdent      :: Identifier
     , aliasAnnotation :: Maybe Annotation
+    } deriving Show
+
+-- TODO
+data Spec = Spec
+    { specIdent       :: Identifier
+    , specAnnotation  :: Maybe Annotation
     } deriving Show
 
 data ClassField = ClassField

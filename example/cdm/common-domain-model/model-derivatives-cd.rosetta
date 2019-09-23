@@ -1,5 +1,5 @@
 namespace "org.isda.cdm"
-version "2.2.6"
+version "2.4.7"
 
 /*
  * FpML cd validation rules perceived as needing extensions to the data rule syntax or calls to java functions:

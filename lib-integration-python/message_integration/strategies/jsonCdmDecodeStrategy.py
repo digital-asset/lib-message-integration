@@ -5,7 +5,7 @@ from ..metadata.cdm.cdmFieldMeta import CdmFieldMeta, CdmField
 from ..metadata.fieldMetaData import FieldMetaData, Cardinality
 from ..metadata.damlTypes import *
 from dateutil.parser import parse
-from datetime import timezone
+from datetime import timezone, date
 
 @dataclass(frozen=True)
 class JsonCdmDecodeStrategy():
@@ -24,15 +24,18 @@ class JsonCdmDecodeStrategy():
     return rec
 
   def decodeField(self, parentElem, field: FieldMetaData[CdmFieldMeta], parentPath: str):
-    if isinstance(field.meta, CdmField):
-      elemName = field.meta.name
-      path = parentPath + "/" + elemName
+    try:
+      if isinstance(field.meta, CdmField):
+        elemName = field.meta.name
+        path = parentPath + "/" + elemName
 
-      fieldValue = parentElem[elemName] if elemName in parentElem else None
-      return self.applyCardinality(fieldValue, field.type, field.cardinality, path)
+        fieldValue = parentElem[elemName] if elemName in parentElem else None
+        return self.applyCardinality(fieldValue, field.type, field.cardinality, path)
 
-    else:
-      raise Exception("Unexpected metadata for field " + str(field) + "at path " + path)
+      else:
+        raise Exception("Unexpected metadata for field " + str(field) + "at path " + path)
+    except Exception as e:
+      raise Exception("Error at path " + path + ": " + str(e))
 
   def applyCardinality(self, elem, type: DamlType, card: Cardinality, path: str):
     if card == Cardinality.MANY or card == Cardinality.MANY1:
@@ -94,4 +97,7 @@ class JsonCdmDecodeStrategy():
     raise Exception(" Unable to match enum value of " + elem + " with type " + str(type) + " at " + path)
 
   def decodePrim(self, elem, prim: Prim, path: str):
-    return elem
+    if prim.prim == Primitive.DATE:
+      return date(elem['year'], elem['month'], elem['day']).isoformat()
+    else:
+      return elem

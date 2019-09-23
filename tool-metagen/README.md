@@ -34,7 +34,7 @@ cabal new-run metagen -- xsd -s ../lib-integration-java/src/main/resources/fpml/
 ### CDM
 
 ```
-cabal new-run metagen -- cdm -d ../example/cdm_v2_0_136/common-domain-model -o ./target/ -p CDM.V2_0_136 -j v2_0_136
+cabal new-run metagen -- cdm -d ../example/cdm/common-domain-model -o ./target/ -p "Org.Isda.Cdm"
 ```
 
 ## FAQ

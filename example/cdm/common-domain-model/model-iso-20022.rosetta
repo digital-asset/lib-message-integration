@@ -1,5 +1,5 @@
 namespace "org.isda.cdm"
-version "2.2.6"
+version "2.4.7"
 
 class Document {
    finInstrmRptgTxRpt FinInstrmRptgTxRpt (1..1);

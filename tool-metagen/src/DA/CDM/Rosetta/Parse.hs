@@ -14,7 +14,7 @@ import Control.Applicative
 import qualified DA.CDM.Rosetta.Schema as Rosetta
 
 import Text.Parsec ( many1, choice, skipMany, skipMany1, option
-                   , optionMaybe, oneOf, noneOf, try, string )
+                   , optionMaybe, oneOf, noneOf, try )
 import Text.Parsec.Indent
 import Text.Parsec.Indent.Explicit
 import Text.Parsec.Indent.Internal
@@ -28,6 +28,7 @@ import Control.Monad.Identity
 
 import qualified Data.List as List
 import qualified Data.Set as Set
+import           Data.Maybe
 
 import qualified System.Directory as Dir
 import System.Environment
@@ -51,13 +52,14 @@ rosettaSchema =
 
 rosettaDecl :: Parser Rosetta.Decl
 rosettaDecl = choice
-    [ Rosetta.ClassDecl       <$> rosettaClass
+    [ Rosetta.DataRuleDecl    <$> rosettaDataRule
+    , Rosetta.ClassDecl       <$> (rosettaClass <|> rosettaData)
     , Rosetta.EnumDecl        <$> rosettaEnum
-    , Rosetta.DataRuleDecl    <$> rosettaDataRule
     , Rosetta.ChoiceRuleDecl  <$> rosettaChoiceRule
     , Rosetta.IsEventDecl     <$> rosettaIsEvent
     , Rosetta.IsProductDecl   <$> rosettaIsProduct
     , Rosetta.AliasDecl       <$> rosettaAlias
+    , Rosetta.SpecDecl        <$> rosettaSpec
     ]
 
 rosettaClass :: Parser Rosetta.Class
@@ -69,6 +71,16 @@ rosettaClass =
         <*> (optional calculation *> (Set.fromList <$> P.sepBy classMeta whiteSpace))
         <*> optionMaybe annotation <* skipMany synonym
         <*> braces (many (classField <* optionMaybe semi <* skipMany synonym)) -- NB: some classes have no fields
+
+rosettaData :: Parser Rosetta.Class
+rosettaData =
+    Rosetta.Class
+      <$> option False (True <$ reserved "abstract")
+      <*> (reserved "data" *> upperIdentifier)
+      <*> optionMaybe (reserved "extends" *> upperIdentifier)
+      <*> (optional calculation *> (Set.fromList <$> P.sepBy classMeta whiteSpace))
+      <*> optionMaybe (colon *> annotation) <* skipMany synonym
+      <*> many classFieldNew 
 
 rosettaEnum :: Parser Rosetta.Enum
 rosettaEnum =
@@ -82,14 +94,14 @@ rosettaEnum =
 rosettaDataRule :: Parser Rosetta.DataRule
 rosettaDataRule =
     Rosetta.DataRule
-        <$> (reserved "data" *> reserved "rule" *> upperIdentifier)
+        <$> (reserved "data rule" *> upperIdentifier)
         <*> (optionMaybe annotation <* block' skipLine)
 
 -- SKIPPED
 rosettaChoiceRule :: Parser Rosetta.ChoiceRule
 rosettaChoiceRule =
     Rosetta.ChoiceRule
-        <$> (reserved "choice" *> reserved "rule" *> upperIdentifier)
+        <$> (reserved "choice rule" *> upperIdentifier)
         <*> (optionMaybe annotation <* block' skipLine)
 
 -- SKIPPED
@@ -113,6 +125,13 @@ rosettaAlias =
         <$> (reserved "alias" *> identifier)
         <*> (optionMaybe annotation <* block' skipLine)
 
+-- SKIPPED
+rosettaSpec :: Parser Rosetta.Spec
+rosettaSpec =
+    Rosetta.Spec
+        <$> (reserved "spec" *> identifier)
+        <*> (optionMaybe annotation <* colon <* block' skipLine)
+
 skipLine :: Parser ()
 skipLine = () <$ (skipMany1 $ noneOf "\r\n") <* (optional P.endOfLine <* whiteSpace)
 
@@ -124,6 +143,16 @@ classField =
         <*> cardinality
         <*> (Set.fromList <$> (P.sepBy fieldMeta comma))
         <*> optionMaybe annotation
+
+classFieldNew :: Parser Rosetta.ClassField
+classFieldNew = do
+  classFieldName <- lowerIdentifier
+  classFieldType <- optionMaybe identifier
+  classFieldCard <- cardinality
+  classFieldAnnotation <- optionMaybe annotation
+  classFieldMeta <- (Set.fromList . catMaybes) <$> many (brackets (metadata <|> synonymNew))
+  _ <- skipMany (try condition)
+  return $ Rosetta.ClassField classFieldName classFieldType classFieldCard classFieldMeta classFieldAnnotation
 
 enumField :: Parser Rosetta.EnumField
 enumField =
@@ -175,8 +204,17 @@ bound =
 synonym :: Parser ()
 synonym = () <$ brackets (reserved "synonym" *> skipMany1 (noneOf "]"))
 
+synonymNew :: Parser (Maybe Rosetta.FieldMeta)
+synonymNew = Nothing <$ (reserved "synonym" *> skipMany1 (noneOf "]"))
+
+metadata :: Parser (Maybe Rosetta.FieldMeta)
+metadata = Just <$> (reserved "metadata" *> fieldMeta)
+
 annotation :: Parser Rosetta.Annotation
 annotation = Rosetta.Annotation <$> angles stringLiteral
+
+condition :: Parser ()
+condition = () <$ P.string "condition" *> skipMany (noneOf ";") *> skipMany semi
 
 -- | Parses a block of lines at the same or greater indentation level
 -- starting at the current position.
@@ -211,9 +249,9 @@ languageDef = P.emptyDef
     , P.opStart        = P.opLetter languageDef
     , P.opLetter       = oneOf ":!#$%&*+./<=>?@\\^|-~"
     , P.reservedOpNames= []
-    , P.reservedNames  = [ "namespace", "class", "enum", "data", "choice", "rule", "extends"
+    , P.reservedNames  = [ "namespace", "class", "enum", "data", "data rule", "choice rule", "extends"
                          , "rosettaKey", "rossetaKeyValue", "scheme", "anchor", "reference"
-                         , "abstract", "alias", "isEvent", "isProduct", "style"
+                         , "abstract", "alias", "isEvent", "isProduct", "style", "spec", "metadata"
                          ]
     , P.caseSensitive  = True
     }

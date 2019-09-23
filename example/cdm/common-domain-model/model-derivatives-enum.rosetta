@@ -1,5 +1,5 @@
 namespace "org.isda.cdm"
-version "2.2.6"
+version "2.4.7"
 
 
 enum DeliveryMethodEnum <"Specifies delivery methods for securities transactions. This coding-scheme defines the possible delivery methods for securities.">
