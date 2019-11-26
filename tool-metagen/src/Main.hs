@@ -22,6 +22,8 @@ import qualified DA.CDM.Rosetta.Convert     as Rosetta
 import qualified DA.CDM.Rosetta.Metadata    as Rosetta
 import qualified DA.CDM.Rosetta.Schema      as Rosetta
 import           DA.CDM.Rosetta.Parse       (parseRosetta)
+import qualified DA.Swagger.Schema          as Swagger
+import qualified DA.Swagger.Parse           as Swagger
 import qualified Data.Aeson                 as Aeson
 import qualified Data.Aeson.Encode.Pretty   as Aeson
 import qualified Data.ByteString.Lazy       as LB
@@ -326,3 +328,30 @@ getDependencies schemas fp = Set.delete fp $ go mempty fp
           in List.foldl' go (Set.insert fp fps) deps
         | otherwise = fps
     getDeps s = Set.fromList . map fst $ XSD.gatherImports s
+
+--------------------------------------------------------------------------------
+-- Swagger Support
+
+runSwagger :: Options -> FilePath -> String -> LoggingT IO ()
+runSwagger Options{..} inputFile modName = do
+  let -- baseDir = takeDirectory inputFile
+      -- inFile = takeFileName inputFile
+
+      damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
+      damlOutFile = damlOutDir </> modName ++ ".daml"
+  schema <- readSwagger inputFile
+  mod <- Swagger.convert schema
+  writeDaml damlOutFile mod
+
+-- Parses JSON into a data type
+readSwagger :: (MonadLogger m, MonadIO m) => FilePath -> m Swagger.Root
+readSwagger file = do 
+  eitherSchema <- liftIO $ Aeson.eitherDecodeFileStrict' file
+  case eitherSchema of
+    Right s -> do
+      logDebugN $ T.pack file <> " : successfully parsed"
+      return s
+    Left err -> do
+      logErrorN $ T.pack file <> " : FAILED TO PARSE : " <> T.pack (show err)
+      liftIO exitFailure
+   
