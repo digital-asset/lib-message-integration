@@ -62,12 +62,15 @@ data Command
            }
   | UseCDM { inputDir :: FilePath
            }
+  | UseSwagger { inputSwaggerFile :: FilePath
+               }
 
 optParser :: Parser Options
 optParser = Options
     <$> subparser
         (  command "xsd" (info xsdOptionsP (progDesc "Use an XML XSD schema file."))
         <> command "cdm" (info cdmOptionsP (progDesc "Use a folder of CDM Rosetta files."))
+        <> command "swagger" (info swaggerOptionsP (progDesc "Use a Swagger JSON schema file."))
         )
     <*> strOption
         ( long "output-dir"
@@ -123,6 +126,15 @@ cdmOptionsP = UseCDM <$> strOption
       <> help "input directory"
     )
 
+swaggerOptionsP :: Parser Command
+swaggerOptionsP = UseSwagger
+  <$> strOption
+    ( long "swagger-schema"
+      <> short 's'
+      <> metavar "SWAGGER-SCHEMA"
+      <> help "input Swagger schema file"
+    )
+
 argParser :: ParserInfo Options
 argParser = info (optParser <**> helper)
     (   fullDesc
@@ -141,6 +153,7 @@ runProgram opts = do
     case optCommand opts of
         UseCDM dir          -> runRosetta opts dir
         UseXSD file modName -> runXSD opts file modName
+        UseSwagger file     -> runSwagger opts file
 
 runLog :: MonadIO m => LogLevel -> LoggingT m a -> m a
 runLog level m =
@@ -332,13 +345,13 @@ getDependencies schemas fp = Set.delete fp $ go mempty fp
 --------------------------------------------------------------------------------
 -- Swagger Support
 
-runSwagger :: Options -> FilePath -> String -> LoggingT IO ()
-runSwagger Options{..} inputFile modName = do
+runSwagger :: Options -> FilePath -> LoggingT IO ()
+runSwagger Options{..} inputFile = do
   let -- baseDir = takeDirectory inputFile
       -- inFile = takeFileName inputFile
 
       damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
-      damlOutFile = damlOutDir </> modName ++ ".daml"
+      damlOutFile = damlOutDir </> "replacewithschemaname" ++ ".daml"
   schema <- readSwagger inputFile
   mod <- Swagger.convert schema
   writeDaml damlOutFile mod

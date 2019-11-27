@@ -6,12 +6,16 @@
 module DA.Swagger.Schema where
 
 import Data.Aeson
+-- import Data.Aeson.Types (Parser)
+import Data.HashMap.Strict (HashMap) --, toList)
+import Data.Text (Text)
 --import GHC.Generics
+--import Data.List.NonEmpty (NonEmpty)
 
 -- Top level declaration, tranformed into DAML data type.
 data Root = Root {
-  rootSwagger :: String,
-  rootPaths :: [Parameter]
+  rootSwagger :: Text,
+  rootPaths :: HashMap Text PathItemObject
 } deriving Show
 
 -- TODO: use genericParseJson + fieldLabelModifier to derive instances automatically
@@ -20,76 +24,70 @@ instance FromJSON Root where
     <$> o .: "swagger"
     <*> o .: "paths"
 
-data Parameter = Parameter {
-  parameterName :: String,
-  parameterIn :: String,
-  parameterDescription :: String,
-  parameterRequired :: Bool,
-  parameterSchema :: Schema
+data PathItemObject = PathItemObject {  -- consider using a coproduct
+  -- pathItemObjectRef :: Maybe Text,
+  pathItemObjectGet :: Maybe OperationObject,
+  pathItemObjectPut :: Maybe OperationObject,
+  pathItemObjectPost :: Maybe OperationObject
+  -- pathItemObjectParameters :: Maybe [ParameterObject] --global params
+  }
+  deriving Show
+
+instance FromJSON PathItemObject where
+  parseJSON = withObject "pathItem" $ \o -> PathItemObject 
+    <$> o .:? "get"
+    <*> o .:? "put"
+    <*> o .:? "post"
+
+data OperationObject = OperationObject {
+  parameters :: Maybe [ParameterObject] -- Either ReferenceObject
+} deriving Show
+
+instance FromJSON OperationObject where
+  parseJSON = withObject "operation" $ \o -> 
+    OperationObject <$> o .:? "parameters"
+
+data ParameterObject = ParameterObject {
+  parameterObjectName :: Text,
+  parameterObjectIn :: Text,
+  parameterObjectDescription :: Maybe Text,
+  parameterObjectRequired :: Bool,
+  parameterObjectSchema :: Maybe Schema,
+  parameterObjectType :: Maybe Text,
+  parameterObejctFormat :: Maybe Text
+  -- There's a whole bunch of other fields here
   } deriving Show
 
-instance FromJSON Parameter where
-  parseJSON = withObject "parameter" $ \o -> Parameter
+instance FromJSON ParameterObject where
+  parseJSON = withObject "parameter" $ \o -> ParameterObject
     <$> o .: "name"
     <*> o .: "in"
-    <*> o .: "description"
+    <*> o .:? "description"
     <*> o .: "required"
-    <*> o .: "schema"
+    <*> o .:? "schema"
+    <*> o .:? "type"
+    <*> o .:? "format"
 
 data Schema = Schema {
-  schemaRef :: Maybe String,
-  schemaFormat :: String,
-  schemaDescription :: String,
+  schemaRef :: Maybe Text,
+  schemaFormat :: Maybe Text,
+  schemaDescription :: Maybe Text,
   schemaDefault :: Maybe Object,
-  schemaMultipleOf :: Maybe Int,
-  schemaMaximum :: Maybe Int,
-  schemaExclusiveMaximum :: Maybe Int,
-  schemaMinimum :: Maybe Int,
-  schemaExclusiveMinimum :: Maybe Int,
-  schemaMaxLength :: Maybe Int,
-  schemaMinLength :: Maybe Int,
-  schemaPattern :: Maybe String,
-  schemaMaxItems :: Maybe Int,
-  schemaMinItems :: Maybe Int,
-  schemaUniqueItems :: Maybe Int,
-  schemaMaxProperties :: Maybe Int,
-  schemaMinProperties :: Maybe Int,
-  schemaRequired :: [String],  
-  schemaDiscriminator :: String,
-  schemaReadOnly :: Bool,
-  schemaType :: [String], -- Either String [String]
-  schemaItems :: [Schema],
-  schemaAllOf :: [Schema]
-  -- _enum :: [Object]
-  -- xml
-  -- externalDocs
-  -- example :: Data.Jaeson.Object
+  schemaType :: Text, -- can be NEL of Text too
+  schemaItems :: Maybe (HashMap Text Schema), -- FIXME, may be a single object
+  schemaProperties :: Maybe (HashMap Text Schema) -- FIXME may be a single object
   } deriving Show
 
 instance FromJSON Schema where
   parseJSON = withObject "schema" $ \o -> Schema
     <$> o .:? "$ref"
-    <*> o .:  "format"
-    <*> o .:  "description"
+    <*> o .:? "format"
+    <*> o .:? "description"
     <*> o .:? "default"
-    <*> o .:? "multipleOf"
-    <*> o .:? "maximum"
-    <*> o .:? "exclusiveMaximum"
-    <*> o .:? "minimum"
-    <*> o .:? "exclusiveMinimum"
-    <*> o .:? "maxLength"
-    <*> o .:? "minLength"
-    <*> o .:? "pattern"
-    <*> o .:? "maxItems"
-    <*> o .:? "minItems"
-    <*> o .:? "uniqueItems"
-    <*> o .:? "maxProperties"
-    <*> o .:? "minProperties"
-    <*> o .: "required"
-    <*> o .: "discriminator"
-    <*> o .: "readOnly"
     <*> o .: "type"
-    <*> o .: "items"
-    <*> o .: "allOf"
+    <*> o .:? "items"
+    <*> o .:? "properties"
+   -- <*> o .:? "properties"
 
-
+-- Parses either a single schema, or multiple schemas in an object.
+-- .:?? :: Value -> Text -> NonEmpty
