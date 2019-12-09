@@ -15,7 +15,7 @@ Executable metagen
                    unordered-containers, directory, filepath, vector,
                    time, text, exceptions, bytestring, casing, aeson, aeson-pretty,
                    optparse-applicative, parsec, indents >= 0.5, xml, extra,
-                   monad-logger
+                   monad-logger, swagger2, insert-ordered-containers, lens
 
   Other-Modules:   DA.CDM.Rosetta.Convert,
                    DA.CDM.Rosetta.Metadata,
@@ -28,6 +28,7 @@ Executable metagen
                    DA.XML.Schema.Metadata,
                    DA.XML.Schema.Parse,
                    DA.XML.Schema.Schema,
+                   DA.Swagger.Parse
                    Paths_metagen
 
   Extensions:      FlexibleContexts

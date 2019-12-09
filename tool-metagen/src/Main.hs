@@ -22,8 +22,8 @@ import qualified DA.CDM.Rosetta.Convert     as Rosetta
 import qualified DA.CDM.Rosetta.Metadata    as Rosetta
 import qualified DA.CDM.Rosetta.Schema      as Rosetta
 import           DA.CDM.Rosetta.Parse       (parseRosetta)
-import qualified DA.Swagger.Schema          as Swagger
-import qualified DA.Swagger.Parse           as Swagger
+import           DA.Swagger.Parse           (parseSwagger)
+import           Data.Swagger               (Swagger)
 import qualified Data.Aeson                 as Aeson
 import qualified Data.Aeson.Encode.Pretty   as Aeson
 import qualified Data.ByteString.Lazy       as LB
@@ -353,11 +353,11 @@ runSwagger Options{..} inputFile = do
       damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
       damlOutFile = damlOutDir </> "replacewithschemaname" ++ ".daml"
   schema <- readSwagger inputFile
-  mod <- Swagger.convert schema
+  mod <- parseSwagger schema
   writeDaml damlOutFile mod
 
 -- Parses JSON into a data type
-readSwagger :: (MonadLogger m, MonadIO m) => FilePath -> m Swagger.Root
+readSwagger :: (MonadLogger m, MonadIO m) => FilePath -> m Swagger
 readSwagger file = do 
   eitherSchema <- liftIO $ Aeson.eitherDecodeFileStrict' file
   case eitherSchema of
