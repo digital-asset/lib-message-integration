@@ -15,7 +15,8 @@ import Data.HashMap.Strict.InsOrd (elems, lookup)
 import Data.Maybe (fromJust, catMaybes)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
-import Control.Lens.Getter
+import Control.Lens
+import GHC.Base ((<|>)) -- Alternative
 
 type Conv = Reader Swagger
 
@@ -26,16 +27,17 @@ parseSwagger env@Swagger{..} =
       decls :: [ Conv (Decl ()) ]
       decls = map parseDecl 
         $ catMaybes 
-        . map _pathItemGet 
+        . map _pathItemGet  --TODO: put, post
         . elems
         $ _swaggerPaths
 
 parseDecl :: Operation -> Conv (Decl ())
 parseDecl op = do 
-    name <- op ^. summary . to (pure . unpack . deriveName . fromJust)
-    let refdFields = ((op ^. parameters) :: [Referenced Param])
-    fields <- traverse parseField refdFields
-    let comment = op ^. description . to (\s -> Comment $ fmap unpack s)
+    fields <- traverse parseField (op ^. parameters)
+    let maybeSum = op ^. summary . to (fmap (unpack . deriveName))
+    let maybeId = op ^. operationId . to (fmap unpack)
+    let name = fromJust $ maybeId <|> maybeSum
+    let comment = op ^. description . to (Comment . fmap unpack)
     return $ RecordType name fields comment
 
 parseField :: Referenced Param -> Conv (Field ())
@@ -55,17 +57,24 @@ parseParamSchema (ParamOther pos) =
 derefSchema :: Referenced Schema -> Conv Schema
 derefSchema (Inline a) = pure a
 derefSchema (Ref (Reference path)) = do
-  schema <- asks (\ swag -> fromJust ( lookup path (_swaggerDefinitions swag)))
+  schema <- asks $ fromJust . lookup path . _swaggerDefinitions
   return schema
 
 derefParam :: Referenced Param -> Conv Param
 derefParam (Inline a) = pure a
 derefParam (Ref (Reference path)) = do
-  param <- asks (\ swag -> fromJust ( lookup path (_swaggerParameters swag)))
+  param <- asks $ fromJust . lookup path . _swaggerParameters
   return param
 
 swaggerToDamlType :: SwaggerType t -> Type ()
 swaggerToDamlType SwaggerString = Prim PrimText
+swaggerToDamlType SwaggerNumber = Prim PrimDecimal
+swaggerToDamlType SwaggerInteger = Prim PrimInteger
+swaggerToDamlType SwaggerBoolean = Prim PrimBool
+-- swaggerToDamlType SwaggerArray = 
+-- swaggerToDamlType SwaggerFile = 
+-- swaggerToDamlType SwaggerNull = 
+-- swaggerToDamlType SwaggerObject = 
 
 -- "Hello world!" -> "HelloWorld!"
 deriveName :: Text -> Text
