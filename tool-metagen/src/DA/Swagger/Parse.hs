@@ -1,7 +1,7 @@
 -- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: Apache-2.0
 
-{-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE GADTs #-}
 module DA.Swagger.Parse where
 
 -- import qualified Data.Aeson as Aeson
@@ -10,72 +10,97 @@ import DA.Daml.TypeModel
 import Control.Monad.Logger
 import Control.Monad.Reader
 import Data.Swagger
-import Data.Text (Text, toTitle, words, unpack)
-import Data.HashMap.Strict.InsOrd (elems, lookup)
+import Data.Text (Text, toTitle, pack, unpack, split)
+import Data.HashMap.Strict.InsOrd (elems, toList)
 import Data.Maybe (fromJust, catMaybes)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
-
-type Conv = Reader Swagger
+import qualified Data.Char (toLower)
 
 parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
-parseSwagger env@Swagger{..} =
-  pure $ Module "Test" [] (runReader (sequence decls) env) noComment
+parseSwagger Swagger{..} =
+  pure $ Module "Test" [] decls noComment
     where 
-      decls :: [ Conv (Decl ()) ]
-      decls = map parseDecl 
-        $ catMaybes 
-        . map _pathItemGet  --TODO: put, post
+      decls = ops >>= parseDecl
+      ops :: [ Operation ]
+      ops = catMaybes 
+        . (=<<) (\pi -> [_pathItemGet pi, _pathItemPut pi, _pathItemPost pi])
         . elems
         $ _swaggerPaths
 
-parseDecl :: Operation -> Conv (Decl ())
-parseDecl op = do 
-    fields <- traverse parseField (op ^. parameters)
-    let maybeSum = op ^. summary . to (fmap (unpack . deriveName))
-    let maybeId = op ^. operationId . to (fmap unpack)
+parseDecl :: Operation -> [ Decl () ]
+parseDecl op =
     let name = fromJust $ maybeId <|> maybeSum
-    let comment = op ^. description . to (Comment . fmap unpack)
-    return $ RecordType name fields comment
+        maybeSum = op ^. summary . to (fmap (unpack . toCamelType))
+        maybeId = op ^. operationId . to (fmap unpack)
+        comment = op ^. description . to (Comment . fmap unpack)
+        (fields, maybeAnonDecls) = 
+          unzip (fmap parseParam (op ^. parameters))
+    in RecordType name fields comment : catMaybes maybeAnonDecls
 
-parseField :: Referenced Param -> Conv (Field ())
-parseField param = do
-    param <- derefParam param
-    let name' = param ^. name . to unpack
-    tpe <- param ^. schema . to parseParamSchema
-    return $ Field name' tpe single noComment ()
+parseParam :: Referenced Param -> (Field (), Maybe (Decl ()))
+parseParam (Inline param) = case param ^. schema of
+  ParamBody s -> parseSchema (param ^. name) s
+  ParamOther pos -> (
+    Field 
+      (param ^. name . to (unpack . toCamelVal))
+      (pos ^. paramSchema . type_ . to (swaggerToDamlType "foo" . fromJust)) 
+      single 
+      noComment 
+      (),
+    Nothing
+    )
+parseParam (Ref (Reference path)) = error "TODO"
+    
+parseSchema :: Text -> Referenced Schema -> (Field (), Maybe (Decl ()))
+parseSchema fieldName (Inline s) = 
+  (Field {
+    field_name = unpack $ toCamelVal fieldName,
+    field_type = swaggerToDamlType anonName (s ^. type_ . to fromJust),
+    field_cardinality = single,
+    field_comment = noComment,
+    field_meta = ()
+   },
+   Just
+     $ RecordType
+         anonName
+         (fst 
+            $ unzip 
+            $ fmap (uncurry parseSchema) (s ^. properties . to toList)
+         )
+         noComment
+  )
+  where anonName = unpack $ toCamelType fieldName
 
-parseParamSchema :: ParamAnySchema -> Conv (Type ())
-parseParamSchema (ParamBody refdSchema) = do
-  schema <- derefSchema refdSchema
-  return $ swaggerToDamlType (schema ^. type_ . to fromJust)
-parseParamSchema (ParamOther pos) =
-  pos ^. paramSchema . type_ . to (pure . swaggerToDamlType . fromJust)
+parseSchema fieldName (Ref (Reference path)) = (
+    Field (unpack fieldName) (Nominal $ unpack path) single noComment (),
+    Nothing
+  )
 
-derefSchema :: Referenced Schema -> Conv Schema
-derefSchema (Inline a) = pure a
-derefSchema (Ref (Reference path)) = do
-  schema <- asks $ fromJust . lookup path . _swaggerDefinitions
-  return schema
+swaggerToDamlType :: Name -> SwaggerType t -> Type ()
+swaggerToDamlType _ SwaggerString = Prim PrimText
+swaggerToDamlType _ SwaggerNumber = Prim PrimDecimal
+swaggerToDamlType _ SwaggerInteger = Prim PrimInteger
+swaggerToDamlType _ SwaggerBoolean = Prim PrimBool
+swaggerToDamlType _ SwaggerArray = error "Type 'array' not implemented yet"
+swaggerToDamlType _ SwaggerFile = error "Type 'file' not implemented yet"
+swaggerToDamlType _ SwaggerNull = error "Type 'null' not implemented yet"
+swaggerToDamlType name SwaggerObject = Nominal name
 
-derefParam :: Referenced Param -> Conv Param
-derefParam (Inline a) = pure a
-derefParam (Ref (Reference path)) = do
-  param <- asks $ fromJust . lookup path . _swaggerParameters
-  return param
+-- Also handles keywords.
+toCamelType :: Text -> Text
+toCamelType "type" = "type_"
+toCamelType s = fold $ fmap toTitle $ split (\a -> case a of
+    ' ' -> True
+    '_' -> True
+    '-' -> True
+    _ -> False
+  ) s
 
-swaggerToDamlType :: SwaggerType t -> Type ()
-swaggerToDamlType SwaggerString = Prim PrimText
-swaggerToDamlType SwaggerNumber = Prim PrimDecimal
-swaggerToDamlType SwaggerInteger = Prim PrimInteger
-swaggerToDamlType SwaggerBoolean = Prim PrimBool
--- swaggerToDamlType SwaggerArray = 
--- swaggerToDamlType SwaggerFile = 
--- swaggerToDamlType SwaggerNull = 
--- swaggerToDamlType SwaggerObject = 
-
--- "Hello world!" -> "HelloWorld!"
-deriveName :: Text -> Text
-deriveName s = fold $ fmap toTitle $ words s
+toCamelVal :: Text -> Text
+toCamelVal t = case unpack (toCamelType t) of 
+  c : cs -> pack $ Data.Char.toLower c : cs
+  empty -> pack empty
+  
