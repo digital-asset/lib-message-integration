@@ -11,7 +11,7 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Data.Swagger
 import Data.Text (Text, toTitle, pack, unpack, split)
-import Data.HashMap.Strict.InsOrd (elems, toList)
+import Data.HashMap.Strict.InsOrd (toList)
 import Data.Maybe (fromJust, catMaybes)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
@@ -20,17 +20,20 @@ import GHC.Base ((<|>)) -- Alternative
 import qualified Data.Char (toLower)
 
 parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
-parseSwagger Swagger{..} =
-  pure $ Module "Test" [] decls noComment
+parseSwagger sw =
+  pure $ Module name imports (defs ++ ops) (Comment desc)
     where 
-      decls = definitions <> (ops >>= parseDecl)
-      definitions :: [ Decl () ]
-      definitions = catMaybes . snd . unzip . fmap (uncurry parseSchema) . toList . fmap Inline $ _swaggerDefinitions
-      ops :: [ Operation ]
-      ops = catMaybes 
-        . (=<<) (\pi -> [_pathItemGet pi, _pathItemPut pi, _pathItemPost pi]) -- consider replacing with `allOperations`
-        . elems
-        $ _swaggerPaths
+      name = sw ^. info . title . to (unpack . toCamelType)
+      imports = []
+      defs = catMaybes
+               . snd
+               . unzip
+               . fmap (uncurry parseSchema)
+               . toList 
+               . fmap Inline 
+               $ (sw ^. definitions)
+      ops = toListOf allOperations sw >>= parseDecl
+      desc = sw ^. info . description . to (fmap unpack) --TODO: seems the comment is not included in the output file.
 
 parseDecl :: Operation -> [ Decl () ]
 parseDecl op =
@@ -54,7 +57,7 @@ parseParam (Inline param) = case param ^. schema of
       (),
     Nothing
     )
-parseParam (Ref (Reference path)) = error "TODO"
+parseParam (Ref (Reference _ {- path -})) = error "TODO"
     
 parseSchema :: Text -> Referenced Schema -> (Field (), Maybe (Decl ()))
 parseSchema fieldName (Inline s) = 
