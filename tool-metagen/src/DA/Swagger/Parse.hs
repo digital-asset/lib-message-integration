@@ -23,10 +23,12 @@ parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
 parseSwagger Swagger{..} =
   pure $ Module "Test" [] decls noComment
     where 
-      decls = ops >>= parseDecl
+      decls = definitions <> (ops >>= parseDecl)
+      definitions :: [ Decl () ]
+      definitions = catMaybes . snd . unzip . fmap (uncurry parseSchema) . toList . fmap Inline $ _swaggerDefinitions
       ops :: [ Operation ]
       ops = catMaybes 
-        . (=<<) (\pi -> [_pathItemGet pi, _pathItemPut pi, _pathItemPost pi])
+        . (=<<) (\pi -> [_pathItemGet pi, _pathItemPut pi, _pathItemPost pi]) -- consider replacing with `allOperations`
         . elems
         $ _swaggerPaths
 
@@ -59,20 +61,31 @@ parseSchema fieldName (Inline s) =
   (Field {
     field_name = unpack $ toCamelVal fieldName,
     field_type = swaggerToDamlType anonName (s ^. type_ . to fromJust),
-    field_cardinality = single,
-    field_comment = noComment,
+    field_cardinality = single, -- Ovewrwritten; see mkOptional
+    field_comment = Comment $ fmap unpack (s ^. description),
     field_meta = ()
    },
    Just
      $ RecordType
          anonName
-         (fst 
+         (fmap mkOptional
+            $ fst 
             $ unzip 
             $ fmap (uncurry parseSchema) (s ^. properties . to toList)
          )
          noComment
   )
-  where anonName = unpack $ toCamelType fieldName
+  where 
+    anonName = unpack $ toCamelType fieldName
+    mkOptional f = 
+      if elem (pack $ field_name f) (s ^. required) then f
+      else Field {
+        field_name = field_name (f),
+        field_type = field_type (f),
+        field_cardinality = optional,
+        field_comment = field_comment(f),
+        field_meta = field_meta(f)
+      }
 
 parseSchema fieldName (Ref (Reference path)) = (
     Field (unpack fieldName) (Nominal $ unpack path) single noComment (),
