@@ -347,13 +347,10 @@ getDependencies schemas fp = Set.delete fp $ go mempty fp
 
 runSwagger :: Options -> FilePath -> LoggingT IO ()
 runSwagger Options{..} inputFile = do
-  let -- baseDir = takeDirectory inputFile
-      -- inFile = takeFileName inputFile
-
-      damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
-      damlOutFile = damlOutDir </> "replacewithschemaname" ++ ".daml"
+  let damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
   schema <- readSwagger inputFile
   mod <- parseSwagger schema
+  let damlOutFile = damlOutDir </> (module_name mod) ++ ".daml"
   writeDaml damlOutFile mod
 
 -- Parses JSON into a data type
