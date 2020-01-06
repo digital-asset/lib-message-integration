@@ -7,6 +7,7 @@
 --
 module DA.XML.Schema.Schema where
 
+import Data.Semigroup (Semigroup, (<>))
 import Text.XML.Light (QName)
 
 type Name    = String

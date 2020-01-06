@@ -10,6 +10,7 @@ import Control.Arrow ((&&&))
 import Control.Monad.State (State, evalState, modify, gets)
 import Control.Monad.Writer (WriterT(..), tell{-, censor-})
 import Control.Monad.Trans
+import Data.Semigroup (Semigroup, (<>))
 import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map

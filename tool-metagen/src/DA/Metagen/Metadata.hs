@@ -11,6 +11,7 @@ module DA.Metagen.Metadata where
 import           DA.Daml.TypeModel
 
 import           Data.Aeson
+import           Data.Semigroup            (Semigroup, (<>))
 import           Data.Map                  (Map)
 import qualified Data.Map                  as Map
 import           Data.Text                  (Text)

@@ -35,6 +35,7 @@ import qualified Data.Map                   as Map
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
+import           Data.Semigroup             (Semigroup, (<>))
 import           Data.Version               (showVersion)
 import           Options.Applicative
 import           Options.Applicative.Types  (readerAsk, readerError)

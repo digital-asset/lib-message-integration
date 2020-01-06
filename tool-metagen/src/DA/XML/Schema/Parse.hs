@@ -14,6 +14,7 @@ import Data.List
 import Data.List.Extra (split)
 import Data.Map (Map)
 import qualified Data.Map as Map
+import Data.Semigroup (Semigroup, (<>))
 import Text.XML.Light (QName(..), Content(..), Element(..), CData(..))
 import qualified Text.XML.Light         as XML
 import DA.XML.Schema.Schema (Name)

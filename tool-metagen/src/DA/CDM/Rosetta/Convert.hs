@@ -16,6 +16,7 @@ import           Data.Map              (Map)
 import qualified Data.Map              as Map
 import qualified Data.Set              as Set
 import           Data.Maybe
+import           Data.Semigroup        (Semigroup, (<>))
 import           Prelude               hiding (Enum)
 
 type Name = String

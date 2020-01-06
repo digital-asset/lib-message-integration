@@ -22,6 +22,7 @@ import           Data.Maybe
 import qualified Data.Set                  as Set
 import           Data.Set                  (Set)
 import qualified Data.Text                 as T
+import           Data.Semigroup            (Semigroup, (<>))
 import           Text.XML.Light            (QName (..))
 
 type Conv = ReaderT Env (LoggingT IO)
