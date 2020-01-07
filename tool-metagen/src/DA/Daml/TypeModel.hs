@@ -44,8 +44,12 @@ data Decl a
     | RecordType    Name [Field a] Comment
     | VariantType   Name [Field a] Comment
     | NewType       Name (Type a) Comment
+    | TemplateType   Name [Field a] Signatory Comment
     | InlineComment String
     deriving (Eq, Show)
+
+newtype Signatory = Signatory { toString :: String }
+  deriving (Eq, Show)
 
 getTypeName :: Decl a -> Maybe Name
 getTypeName (EnumType n _ _)    = Just n

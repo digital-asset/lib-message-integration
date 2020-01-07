@@ -43,7 +43,14 @@ parseDecl op =
         comment = op ^. description . to (Comment . fmap unpack)
         (fields, maybeAnonDecls) = 
           unzip (fmap parseParam (op ^. parameters))
-    in RecordType name fields comment : catMaybes maybeAnonDecls
+        signatoryField = Field {
+          field_name = "requestor",
+          field_type = Prim PrimParty,
+          field_cardinality = single,
+          field_comment = noComment,
+          field_meta = ()
+        }
+    in TemplateType name (signatoryField : fields) (Signatory "requestor") comment : catMaybes maybeAnonDecls
 
 parseParam :: Referenced Param -> (Field (), Maybe (Decl ()))
 parseParam (Inline param) = case param ^. schema of

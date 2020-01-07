@@ -72,6 +72,14 @@ ppDecl (NewType name base comment) =
     --     $$ nest 4 (text "deriving (Eq, Ord, Show)")
     $$ text "type" <+> text name <+> text "=" <+> ppType single id base
 
+-- Added for Swagger
+ppDecl (TemplateType name fields (Signatory sig) comment) = 
+  ppComment Before comment
+  $$ text "template" <+> text name <+> text "with"
+      $$ nest 4 (ppRecordFields fields)
+      $$ nest 2 (text "where"
+          $$ nest 2 (text "signatory" <+> text sig))
+
 ppDecl d = text $ "-- UNSUPPORTED: " ++ show d
 
 ppRecordFields :: [Field a] -> Doc
