@@ -14,10 +14,20 @@ import Data.Text (Text, toTitle, pack, unpack, split)
 import Data.HashMap.Strict.InsOrd (toList)
 import Data.Maybe (fromJust, catMaybes)
 import Data.Foldable (fold)
+import Data.Bifunctor
 import Prelude hiding (words, lookup)
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
 import qualified Data.Char (toLower)
+
+-- Used in both requests and replies
+signatoryField = Field {
+  field_name = "requestor",
+  field_type = Prim PrimParty,
+  field_cardinality = single,
+  field_comment = noComment,
+  field_meta = ()
+}
 
 parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
 parseSwagger sw =
@@ -43,35 +53,63 @@ parseDecl op =
         comment = op ^. description . to (Comment . fmap unpack)
         (fields, maybeAnonDecls) = 
           unzip (fmap parseParam (op ^. parameters))
-        signatoryField = Field {
-          field_name = "requestor",
-          field_type = Prim PrimParty,
-          field_cardinality = single,
-          field_comment = noComment,
-          field_meta = ()
-        }
-    in TemplateType name (signatoryField : fields) (Signatory "requestor") comment : catMaybes maybeAnonDecls
+    in TemplateType name (signatoryField : fields) (Signatory "requestor") comment 
+      : catMaybes maybeAnonDecls
+      ++ (op ^. responses . to (parseResponses name))
 
+parseResponses :: String -> Responses -> [ Decl () ]
+parseResponses name r = 
+  let defaultName = name ++ "ResponseDefault"
+      maybeDefaultResponse = r ^. default_ . to (fmap (parseResponse defaultName))
+      defaultResponse = fst <$> maybeDefaultResponse
+      embeddedDefault = maybeDefaultResponse >>= snd
+      codeName code = name ++ "Response" ++ show code
+      (codedResponses, embeddedData) = 
+        r ^. responses . to (unzip
+          . fmap (uncurry parseResponse . first codeName)
+          . toList
+        )
+  in codedResponses ++ catMaybes (defaultResponse : embeddedDefault : embeddedData)
+
+parseResponse :: String -> Referenced Response -> (Decl (), Maybe (Decl ()))
+parseResponse name (Inline (Response desc (Just refdSchema) _ _ )) = (
+    TemplateType name (signatoryField: fields) (Signatory "requestor") (Comment $ Just $ unpack desc),
+    Nothing
+  )
+    where
+      fields = case snd (parseSchema "response" refdSchema) of
+        Just (RecordType _ fields' _) -> fields'
+        otherwise -> []
+
+parseResponse name (Inline (Response desc Nothing _ _)) = (
+    TemplateType name [signatoryField] (Signatory "requestor") (Comment $ Just $ unpack desc),
+    Nothing
+  )
+parseResponse name (Ref _) = error "Reference response not supported yet"
+ 
 parseParam :: Referenced Param -> (Field (), Maybe (Decl ()))
 parseParam (Inline param) = case param ^. schema of
   ParamBody s -> parseSchema (param ^. name) s
-  ParamOther pos -> (
-    Field 
-      (param ^. name . to (unpack . toCamelVal))
-      (pos ^. paramSchema . type_ . to (swaggerToDamlType "foo" . fromJust)) 
-      single 
-      noComment 
-      (),
-    Nothing
+  ParamOther pos -> 
+    let (type', cardinality') = swaggerToDamlType "foo" (pos ^. paramSchema . type_ . to fromJust) (pos ^. paramSchema . items)
+    in (
+      Field 
+        (param ^. name . to (unpack . toCamelVal))
+        type'  
+        cardinality' 
+        noComment 
+        (),
+      Nothing
     )
-parseParam (Ref (Reference _ {- path -})) = error "TODO"
+parseParam (Ref (Reference _ {- path -})) = undefined
     
+   
 parseSchema :: Text -> Referenced Schema -> (Field (), Maybe (Decl ()))
 parseSchema fieldName (Inline s) = 
   (Field {
     field_name = unpack $ toCamelVal fieldName,
-    field_type = swaggerToDamlType anonName (s ^. type_ . to fromJust),
-    field_cardinality = single, -- Ovewrwritten; see mkOptional
+    field_type = type',
+    field_cardinality = cardinality', -- Ovewrwritten; see mkOptional
     field_comment = Comment $ fmap unpack (s ^. description),
     field_meta = ()
    },
@@ -87,8 +125,10 @@ parseSchema fieldName (Inline s) =
   )
   where 
     anonName = unpack $ toCamelType fieldName
+    (type', cardinality') = swaggerToDamlType anonName (s ^. type_ . to fromJust) (s ^. items)
     mkOptional f = 
-      if elem (pack $ field_name f) (s ^. required) then f
+      if field_cardinality(f) == many ||
+         elem (pack $ field_name f) (s ^. required) then f
       else Field {
         field_name = field_name (f),
         field_type = field_type (f),
@@ -98,23 +138,28 @@ parseSchema fieldName (Inline s) =
       }
 
 parseSchema fieldName (Ref (Reference path)) = (
-    Field (unpack fieldName) (Nominal $ unpack path) single noComment (),
+    Field (unpack $ toCamelVal fieldName) (Nominal $ unpack path) single noComment (),
     Nothing
   )
 
-swaggerToDamlType :: Name -> SwaggerType t -> Type ()
-swaggerToDamlType _ SwaggerString = Prim PrimText
-swaggerToDamlType _ SwaggerNumber = Prim PrimDecimal
-swaggerToDamlType _ SwaggerInteger = Prim PrimInteger
-swaggerToDamlType _ SwaggerBoolean = Prim PrimBool
-swaggerToDamlType _ SwaggerArray = error "Type 'array' not implemented yet"
-swaggerToDamlType _ SwaggerFile = error "Type 'file' not implemented yet"
-swaggerToDamlType _ SwaggerNull = error "Type 'null' not implemented yet"
-swaggerToDamlType name SwaggerObject = Nominal name
+-- SwaggerItems only required for arity > 1
+swaggerToDamlType :: Name -> SwaggerType t -> Maybe (SwaggerItems t) -> (Type (), Cardinality)
+swaggerToDamlType _ SwaggerString _ = (Prim PrimText, single)
+swaggerToDamlType _ SwaggerNumber _ = (Prim PrimDecimal, single)
+swaggerToDamlType _ SwaggerInteger _ = (Prim PrimInteger, single)
+swaggerToDamlType _ SwaggerBoolean _ = (Prim PrimBool, single)
+swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
+  (fst (swaggerToDamlType "" (schem ^. type_. to fromJust) (schem ^. items)) , many)
+swaggerToDamlType name SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
+  (Nominal $ unpack $ toCamelType ref, many)
+swaggerToDamlType _ SwaggerFile _ = error "Type 'file' not implemented yet"
+swaggerToDamlType _ SwaggerNull _ = error "Type 'null' not implemented yet"
+swaggerToDamlType name SwaggerObject _ = (Nominal name, single)
 
 -- Also handles keywords.
 toCamelType :: Text -> Text
-toCamelType "type" = "type_"
+toCamelType "type"= "type_" --how to bind using '@' ? 
+toCamelType "data"= "data_"
 toCamelType s = fold $ fmap toTitle $ split (\a -> case a of
     ' ' -> True
     '_' -> True
