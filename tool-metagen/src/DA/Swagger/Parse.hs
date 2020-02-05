@@ -11,14 +11,14 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
-import Data.Text (Text, toTitle, pack, unpack, split)
+import Data.Text (Text, pack, unpack, split)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems)
 import Data.Maybe (fromJust)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
-import qualified Data.Char (toLower)
+import qualified Data.Char (toLower, toUpper)
 
 type Field_ = Field ()
 -- Functions returning a SymbolState a will return the top-level declaration(s)
@@ -91,7 +91,7 @@ parseResponses name r =
     parseBody code (Inline (Response _desc Nothing _ _ )) = 
       pure $ Field {
                 field_name = unpack $ toCamelVal $ pack $ name <> " response body " <> show code,
-                field_type = Prim PrimUnit,
+                field_type = Product [], -- use instead of Unit as type not supported in DAML.
                 field_cardinality = single,
                 field_comment = noComment,
                 field_meta = ()
@@ -176,3 +176,9 @@ toCamelVal t = case unpack (toCamelType t) of
   c : cs -> pack $ Data.Char.toLower c : cs
   empty -> pack empty
   
+-- This is different from Data.Text in that it only operates on the first char.
+-- e.g. `Data.Text.toTitle "API" -> "Api"` whereas here we get "API back unchanged.
+toTitle :: Text -> Text
+toTitle s = pack $ case unpack s of
+     h : t -> Data.Char.toUpper h : t
+     [] -> []
