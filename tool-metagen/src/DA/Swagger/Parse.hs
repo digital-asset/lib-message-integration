@@ -9,18 +9,25 @@ module DA.Swagger.Parse where
 import DA.Daml.TypeModel
 import Control.Monad.Logger
 import Control.Monad.Reader
+import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
 import Data.Text (Text, toTitle, pack, unpack, split)
-import Data.HashMap.Strict.InsOrd (toList)
-import Data.Maybe (fromJust, catMaybes)
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems)
+import Data.Maybe (fromJust)
 import Data.Foldable (fold)
-import Data.Bifunctor
 import Prelude hiding (words, lookup)
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
 import qualified Data.Char (toLower)
 
+type Field_ = Field ()
+-- Functions returning a SymbolState a will return the top-level declaration(s)
+-- a, and embedded declarations in the monad (e.g. when a field is of type 
+-- `object`, a corresponding `data` declaration is required at the top level.
+type SymbolState = State (InsOrdHashMap Text (Decl()))
+
 -- Used in both requests and replies
+signatoryField :: Field_
 signatoryField = Field {
   field_name = "requestor",
   field_type = Prim PrimParty,
@@ -35,97 +42,96 @@ parseSwagger sw =
     where 
       name = sw ^. info . title . to (unpack . toCamelType)
       imports = []
-      defs = catMaybes
-               . snd
-               . unzip
-               . fmap (uncurry parseSchema)
-               . toList 
-               . fmap Inline 
-               $ (sw ^. definitions)
-      ops = toListOf allOperations sw >>= parseDecl
+      defs = parseDefns sw
+      ops = parseOps sw
       desc = sw ^. info . description . to (fmap unpack) --TODO: seems the comment is not included in the output file.
 
-parseDecl :: Operation -> [ Decl () ]
-parseDecl op =
-    let name = fromJust $ maybeId <|> maybeSum
-        maybeSum = op ^. summary . to (fmap (unpack . toCamelType))
-        maybeId = op ^. operationId . to (fmap unpack)
-        comment = op ^. description . to (Comment . fmap unpack)
-        (fields, maybeAnonDecls) = 
-          unzip (fmap parseParam (op ^. parameters))
-    in TemplateType name (signatoryField : fields) (Signatory "requestor") comment 
-      : catMaybes maybeAnonDecls
-      ++ (op ^. responses . to (parseResponses name))
+parseOps :: Swagger -> [ Decl () ]
+parseOps s = case runState (traverse parseOp (toListOf allOperations s)) empty of
+    (ops, decls) -> concat ops ++ elems decls
 
-parseResponses :: String -> Responses -> [ Decl () ]
+parseOp :: Operation -> SymbolState [ Decl () ]
+parseOp op =
+  do let name = fromJust $ maybeId <|> maybeSum
+         maybeSum = op ^. summary . to (fmap unpack)
+         maybeId = op ^. operationId . to (fmap unpack)
+         comment = op ^. description . to (Comment . fmap unpack)
+     params <- traverse parseParam (op ^. parameters)
+     reps <- parseResponses name (op ^. responses)
+     return $ TemplateType (unpack . toCamelType . pack $ name) (signatoryField : params) (Signatory "requestor") comment : reps
+
+parseResponses :: String -> Responses -> SymbolState [ Decl () ]
 parseResponses name r = 
-  let defaultName = name ++ "ResponseDefault"
-      maybeDefaultResponse = r ^. default_ . to (fmap (parseResponse defaultName))
-      defaultResponse = fst <$> maybeDefaultResponse
-      embeddedDefault = maybeDefaultResponse >>= snd
-      codeName code = name ++ "Response" ++ show code
-      (codedResponses, embeddedData) = 
-        r ^. responses . to (unzip
-          . fmap (uncurry parseResponse . first codeName)
-          . toList
-        )
-  in codedResponses ++ catMaybes (defaultResponse : embeddedDefault : embeddedData)
-
-parseResponse :: String -> Referenced Response -> (Decl (), Maybe (Decl ()))
-parseResponse name (Inline (Response desc (Just refdSchema) _ _ )) = (
-    TemplateType name (signatoryField: fields) (Signatory "requestor") (Comment $ Just $ unpack desc),
-    Nothing
-  )
-    where
-      fields = case snd (parseSchema "response" refdSchema) of
-        Just (RecordType _ fields' _) -> fields'
-        otherwise -> []
-
-parseResponse name (Inline (Response desc Nothing _ _)) = (
-    TemplateType name [signatoryField] (Signatory "requestor") (Comment $ Just $ unpack desc),
-    Nothing
-  )
-parseResponse name (Ref _) = error "Reference response not supported yet"
+  do 
+    repMap <- traverseWithKey parseBody (r ^. responses)
+    return $ 
+      [ TemplateType 
+          typeName
+          [signatoryField, body]
+          (Signatory "requestor")
+          noComment
+        ,
+        VariantType -- see TypeModel.hs for how this is converted to variant
+          (typeName <> "Body")
+          (elems repMap)
+          noComment
+      ]
+  where 
+    typeName = unpack ((toCamelType $ pack name) <> "Response")
+    body = Field {
+      field_name = "body",
+      field_type = Nominal $ typeName <> "Body",
+      field_cardinality = single,
+      field_comment = noComment,
+      field_meta = ()
+    }
+    parseBody :: (Show a) => a -> Referenced Response -> SymbolState Field_
+    parseBody code (Inline (Response _desc (Just refdSchema) _ _ )) = 
+      parseSchema (pack ( name <> " response body " <> show code)) refdSchema
+    parseBody code (Inline (Response _desc Nothing _ _ )) = 
+      pure $ Field {
+                field_name = unpack $ toCamelVal $ pack $ name <> " response body " <> show code,
+                field_type = Prim PrimUnit,
+                field_cardinality = single,
+                field_comment = noComment,
+                field_meta = ()
+             }
  
-parseParam :: Referenced Param -> (Field (), Maybe (Decl ()))
+parseParam :: Referenced Param -> SymbolState Field_
 parseParam (Inline param) = case param ^. schema of
   ParamBody s -> parseSchema (param ^. name) s
   ParamOther pos -> 
-    let (type', cardinality') = swaggerToDamlType "foo" (pos ^. paramSchema . type_ . to fromJust) (pos ^. paramSchema . items)
-    in (
+    let (type', cardinality') = swaggerToDamlType "" (pos ^. paramSchema . type_ . to fromJust) (pos ^. paramSchema . items)
+    in pure $
       Field 
         (param ^. name . to (unpack . toCamelVal))
         type'  
         cardinality' 
         noComment 
-        (),
-      Nothing
-    )
+        ()
 parseParam (Ref (Reference _ {- path -})) = undefined
     
-   
-parseSchema :: Text -> Referenced Schema -> (Field (), Maybe (Decl ()))
+parseDefns :: Swagger -> [ Decl () ]
+parseDefns s = elems (execState (traverseWithKey parseSchema (fmap Inline (s ^. definitions))) empty) 
+
+parseSchema :: Text -> Referenced Schema -> SymbolState Field_
 parseSchema fieldName (Inline s) = 
-  (Field {
-    field_name = unpack $ toCamelVal fieldName,
-    field_type = type',
-    field_cardinality = cardinality', -- Ovewrwritten; see mkOptional
-    field_comment = Comment $ fmap unpack (s ^. description),
-    field_meta = ()
-   },
-   Just
-     $ RecordType
-         anonName
-         (fmap mkOptional
-            $ fst 
-            $ unzip 
-            $ fmap (uncurry parseSchema) (s ^. properties . to toList)
-         )
-         noComment
-  )
+  do 
+    let typeName = unpack $ toCamelType fieldName
+        valName = unpack $ toCamelVal fieldName
+        (type', cardinality') = swaggerToDamlType typeName (s ^. type_ . to fromJust) (s ^. items)
+    fields <- traverseWithKey parseSchema (s ^. properties)
+    modify $ case type' of
+      Prim _ -> id
+      _ -> insert (pack typeName) (RecordType typeName (elems $ fmap mkOptional fields) noComment) --FIXME: handle namespace clashes
+    return $ Field {
+      field_name = valName,
+      field_type = type',
+      field_cardinality = cardinality', -- Ovewrwritten; see mkOptional
+      field_comment = Comment $ fmap unpack (s ^. description),
+      field_meta = ()
+     }
   where 
-    anonName = unpack $ toCamelType fieldName
-    (type', cardinality') = swaggerToDamlType anonName (s ^. type_ . to fromJust) (s ^. items)
     mkOptional f = 
       if field_cardinality(f) == many ||
          elem (pack $ field_name f) (s ^. required) then f
@@ -137,10 +143,8 @@ parseSchema fieldName (Inline s) =
         field_meta = field_meta(f)
       }
 
-parseSchema fieldName (Ref (Reference path)) = (
-    Field (unpack $ toCamelVal fieldName) (Nominal $ unpack path) single noComment (),
-    Nothing
-  )
+parseSchema fieldName (Ref (Reference path)) = 
+    return $ Field (unpack $ toCamelVal fieldName) (Nominal $ unpack path) single noComment ()
 
 -- SwaggerItems only required for arity > 1
 swaggerToDamlType :: Name -> SwaggerType t -> Maybe (SwaggerItems t) -> (Type (), Cardinality)
@@ -150,7 +154,7 @@ swaggerToDamlType _ SwaggerInteger _ = (Prim PrimInteger, single)
 swaggerToDamlType _ SwaggerBoolean _ = (Prim PrimBool, single)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
   (fst (swaggerToDamlType "" (schem ^. type_. to fromJust) (schem ^. items)) , many)
-swaggerToDamlType name SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
+swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal $ unpack $ toCamelType ref, many)
 swaggerToDamlType _ SwaggerFile _ = error "Type 'file' not implemented yet"
 swaggerToDamlType _ SwaggerNull _ = error "Type 'null' not implemented yet"
@@ -158,9 +162,9 @@ swaggerToDamlType name SwaggerObject _ = (Nominal name, single)
 
 -- Also handles keywords.
 toCamelType :: Text -> Text
-toCamelType "type"= "type_" --how to bind using '@' ? 
-toCamelType "data"= "data_"
-toCamelType s = fold $ fmap toTitle $ split (\a -> case a of
+toCamelType "type"= "Type_" --how to bind using '@' ? 
+toCamelType "data"= "Data_"
+toCamelType s = fold $ fmap toTitle $ split (\a -> case a of --FIXME: toTitle differs from scala capitalize (trailing characters are not touched).
     ' ' -> True
     '_' -> True
     '-' -> True
