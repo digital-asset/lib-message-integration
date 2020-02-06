@@ -144,7 +144,13 @@ parseSchema fieldName (Inline s) =
       }
 
 parseSchema fieldName (Ref (Reference path)) = 
-    return $ Field (unpack $ toCamelVal fieldName) (Nominal $ unpack path) single noComment ()
+    return $ Field {
+               field_name = unpack . toCamelVal $ fieldName,
+               field_type = Nominal . unpack . toCamelType $ path,
+               field_cardinality = single,
+               field_comment = noComment,
+               field_meta = ()
+            }
 
 -- SwaggerItems only required for arity > 1
 swaggerToDamlType :: Name -> SwaggerType t -> Maybe (SwaggerItems t) -> (Type (), Cardinality)
