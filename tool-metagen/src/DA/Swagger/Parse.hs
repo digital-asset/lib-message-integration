@@ -104,7 +104,7 @@ parseParam (Inline param) = case param ^. schema of
     let (type', cardinality') = 
            swaggerToDamlType 
              ""
-             (pos ^. paramSchema . type_ . to (fromMaybe $ error $ "missing `type` from " <> show param))
+             (pos ^. paramSchema . type_ . to (fromMaybe SwaggerString)) -- Return untyped string value by default.
              (pos ^. paramSchema . items)
     in pure $
       Field 
@@ -125,7 +125,7 @@ parseSchema fieldName (Inline s) =
         valName = unpack $ toCamelVal fieldName
         (type', cardinality') = swaggerToDamlType 
            typeName 
-           (s ^. type_ . to (fromMaybe $ error $ "missing `type` in" <> show s))
+           (s ^. type_ . to (fromMaybe SwaggerString)) -- Return untyped string value by default.
            (s ^. items)
     fields <- traverseWithKey parseSchema (s ^. properties)
     modify $ case type' of
