@@ -56,7 +56,7 @@ parseOp op =
          maybeSum = op ^. summary . to (fmap unpack)
          maybeId = op ^. operationId . to (fmap unpack)
          comment = op ^. description . to (Comment . fmap unpack)
-     params <- traverse parseParam (op ^. parameters)
+     params <- traverse (parseParam (pack name)) (op ^. parameters)
      reps <- parseResponses name (op ^. responses)
      return $ TemplateType (unpack . toCamelType . pack $ name) (signatoryField : params) (Signatory "requestor") comment : reps
 
@@ -98,10 +98,10 @@ parseResponses name r =
                 field_meta = ()
              }
  
-parseParam :: Referenced Param -> SymbolState Field_
-parseParam (Inline param) = case param ^. schema of
-  ParamBody s -> parseSchema (param ^. name) s
-  ParamOther pos -> 
+parseParam :: Text -> Referenced Param -> SymbolState Field_
+parseParam opName (Inline param) = case param ^. schema of
+  ParamBody s -> parseSchema (param ^. name . to (\x -> opName <> "." <> x)) s
+  ParamOther pos ->
     let (type', cardinality') = 
            swaggerToDamlType 
              ""
@@ -112,9 +112,9 @@ parseParam (Inline param) = case param ^. schema of
         (param ^. name . to (unpack . toCamelVal))
         type'  
         cardinality' 
-        noComment 
+        (Comment $ param ^. description . to (fmap unpack))
         ()
-parseParam (Ref (Reference _path)) = undefined
+parseParam _opName (Ref (Reference _path)) = undefined
     
 parseDefns :: Swagger -> [ Decl () ]
 parseDefns s = elems (execState (traverseWithKey parseSchema (fmap Inline (s ^. definitions))) empty) 
@@ -128,7 +128,7 @@ parseSchema fieldName (Inline s) =
            typeName 
            (s ^. type_ . to (fromMaybe SwaggerString)) -- Return untyped string value by default.
            (s ^. items)
-    fields <- traverseWithKey parseSchema (s ^. properties)
+    fields <- traverseWithKey parseSchema (s ^. properties . to (mapKeys (\x -> fieldName <> "." <> x)))
     modify $ case type' of
       Prim _ -> id
       _ -> insert (pack typeName) (RecordType typeName (elems $ fmap mkOptional fields) noComment) --FIXME: handle namespace clashes
