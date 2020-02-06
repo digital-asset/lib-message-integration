@@ -109,7 +109,7 @@ parseParam (Inline param) = case param ^. schema of
         cardinality' 
         noComment 
         ()
-parseParam (Ref (Reference _ {- path -})) = undefined
+parseParam (Ref (Reference _path)) = undefined
     
 parseDefns :: Swagger -> [ Decl () ]
 parseDefns s = elems (execState (traverseWithKey parseSchema (fmap Inline (s ^. definitions))) empty) 
@@ -156,6 +156,9 @@ swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Inline schem))) =
   (fst (swaggerToDamlType "" (schem ^. type_. to fromJust) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal $ unpack $ toCamelType ref, many)
+swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsPrimitive _ _)) = error "Type 'array' (primitive) not implemented"
+swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsArray _)) = error "Type 'array' (heterogenous) not supported"
+swaggerToDamlType _ SwaggerArray Nothing = (Prim PrimText, many) -- Use this as it apperas in query params mainly. Consider (Nominal "a", many). 
 swaggerToDamlType _ SwaggerFile _ = error "Type 'file' not implemented yet"
 swaggerToDamlType _ SwaggerNull _ = error "Type 'null' not implemented yet"
 swaggerToDamlType name SwaggerObject _ = (Nominal name, single)
