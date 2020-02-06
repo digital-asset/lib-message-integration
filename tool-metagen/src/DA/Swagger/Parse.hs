@@ -12,7 +12,7 @@ import Control.Monad.Reader
 import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
 import Data.Text (Text, pack, unpack, split)
-import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems)
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems, mapKeys, fromList)
 import Data.Maybe (fromMaybe)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
@@ -63,7 +63,8 @@ parseOp op =
 parseResponses :: String -> Responses -> SymbolState [ Decl () ]
 parseResponses name r = 
   do 
-    repMap <- traverseWithKey parseBody (r ^. responses)
+    repMap <- traverseWithKey parseBody (r ^. responses . to (mapKeys show) )
+    defaultRep <- traverseWithKey parseBody $ fromList (r ^.. default_ . traverse . to ("default",))
     return $ 
       [ TemplateType 
           typeName
@@ -73,7 +74,7 @@ parseResponses name r =
         ,
         VariantType -- see TypeModel.hs for how this is converted to variant
           (typeName <> "Body")
-          (elems repMap)
+          (elems $ repMap <> defaultRep)
           noComment
       ]
   where 
@@ -85,12 +86,12 @@ parseResponses name r =
       field_comment = noComment,
       field_meta = ()
     }
-    parseBody :: (Show a) => a -> Referenced Response -> SymbolState Field_
+    parseBody :: String -> Referenced Response -> SymbolState Field_
     parseBody code (Inline (Response _desc (Just refdSchema) _ _ )) = 
-      parseSchema (pack ( name <> " response body " <> show code)) refdSchema
+      parseSchema (pack ( name <> " response body " <> code)) refdSchema
     parseBody code (Inline (Response _desc Nothing _ _ )) = 
       pure $ Field {
-                field_name = unpack $ toCamelVal $ pack $ name <> " response body " <> show code,
+                field_name = unpack $ toCamelVal $ pack $ name <> " response body " <> code,
                 field_type = Product [], -- use instead of Unit as type not supported in DAML.
                 field_cardinality = single,
                 field_comment = noComment,
