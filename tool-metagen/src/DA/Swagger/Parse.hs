@@ -167,7 +167,7 @@ swaggerToDamlType _ SwaggerNumber _ = (Prim PrimDecimal, single)
 swaggerToDamlType _ SwaggerInteger _ = (Prim PrimInteger, single)
 swaggerToDamlType _ SwaggerBoolean _ = (Prim PrimBool, single)
 swaggerToDamlType name SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
-  (fst (swaggerToDamlType name (schem ^?! type_ . folded) (schem ^. items)) , many)
+  (fst (swaggerToDamlType name (schem ^. type_ . to (fromMaybe SwaggerString)) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal $ unpack $ toCamelType ref, many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsPrimitive _ _)) = error "Type 'array' (primitive) not implemented"
