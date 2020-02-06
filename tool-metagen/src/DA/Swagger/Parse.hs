@@ -97,6 +97,7 @@ parseResponses name r =
                 field_comment = noComment,
                 field_meta = ()
              }
+    parseBody _ (Ref _) = undefined
  
 parseParam :: Text -> Referenced Param -> SymbolState Field_
 parseParam opName (Inline param) = case param ^. schema of
