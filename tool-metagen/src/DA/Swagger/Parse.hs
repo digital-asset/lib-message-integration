@@ -13,7 +13,7 @@ import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
 import Data.Text (Text, pack, unpack, split)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems)
-import Data.Maybe (fromJust)
+import Data.Maybe (fromMaybe)
 import Data.Foldable (fold)
 import Prelude hiding (words, lookup)
 import Control.Lens
@@ -52,7 +52,7 @@ parseOps s = case runState (traverse parseOp (toListOf allOperations s)) empty o
 
 parseOp :: Operation -> SymbolState [ Decl () ]
 parseOp op =
-  do let name = fromJust $ maybeId <|> maybeSum
+  do let name = fromMaybe (error $"missing `operationId` and `summary` in " <> show op) (maybeId <|> maybeSum)
          maybeSum = op ^. summary . to (fmap unpack)
          maybeId = op ^. operationId . to (fmap unpack)
          comment = op ^. description . to (Comment . fmap unpack)
@@ -101,7 +101,11 @@ parseParam :: Referenced Param -> SymbolState Field_
 parseParam (Inline param) = case param ^. schema of
   ParamBody s -> parseSchema (param ^. name) s
   ParamOther pos -> 
-    let (type', cardinality') = swaggerToDamlType "" (pos ^. paramSchema . type_ . to fromJust) (pos ^. paramSchema . items)
+    let (type', cardinality') = 
+           swaggerToDamlType 
+             ""
+             (pos ^. paramSchema . type_ . to (fromMaybe $ error $ "missing `type` from " <> show param))
+             (pos ^. paramSchema . items)
     in pure $
       Field 
         (param ^. name . to (unpack . toCamelVal))
@@ -119,7 +123,10 @@ parseSchema fieldName (Inline s) =
   do 
     let typeName = unpack $ toCamelType fieldName
         valName = unpack $ toCamelVal fieldName
-        (type', cardinality') = swaggerToDamlType typeName (s ^. type_ . to fromJust) (s ^. items)
+        (type', cardinality') = swaggerToDamlType 
+           typeName 
+           (s ^. type_ . to (fromMaybe $ error $ "missing `type` in" <> show s))
+           (s ^. items)
     fields <- traverseWithKey parseSchema (s ^. properties)
     modify $ case type' of
       Prim _ -> id
@@ -159,7 +166,7 @@ swaggerToDamlType _ SwaggerNumber _ = (Prim PrimDecimal, single)
 swaggerToDamlType _ SwaggerInteger _ = (Prim PrimInteger, single)
 swaggerToDamlType _ SwaggerBoolean _ = (Prim PrimBool, single)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
-  (fst (swaggerToDamlType "" (schem ^. type_. to fromJust) (schem ^. items)) , many)
+  (fst (swaggerToDamlType "" (schem ^?! type_ . folded) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal $ unpack $ toCamelType ref, many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsPrimitive _ _)) = error "Type 'array' (primitive) not implemented"
