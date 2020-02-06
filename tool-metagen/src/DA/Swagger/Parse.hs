@@ -104,7 +104,7 @@ parseParam opName (Inline param) = case param ^. schema of
   ParamOther pos ->
     let (type', cardinality') = 
            swaggerToDamlType 
-             ""
+             (param ^. name . to (unpack . toCamelType))
              (pos ^. paramSchema . type_ . to (fromMaybe SwaggerString)) -- Return untyped string value by default.
              (pos ^. paramSchema . items)
     in pure $
@@ -166,8 +166,8 @@ swaggerToDamlType _ SwaggerString _ = (Prim PrimText, single)
 swaggerToDamlType _ SwaggerNumber _ = (Prim PrimDecimal, single)
 swaggerToDamlType _ SwaggerInteger _ = (Prim PrimInteger, single)
 swaggerToDamlType _ SwaggerBoolean _ = (Prim PrimBool, single)
-swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
-  (fst (swaggerToDamlType "" (schem ^?! type_ . folded) (schem ^. items)) , many)
+swaggerToDamlType name SwaggerArray (Just (SwaggerItemsObject (Inline schem))) = 
+  (fst (swaggerToDamlType name (schem ^?! type_ . folded) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal $ unpack $ toCamelType ref, many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsPrimitive _ _)) = error "Type 'array' (primitive) not implemented"
