@@ -185,6 +185,7 @@ toCamelType s = fold $ fmap toTitle $ split (\a -> case a of --FIXME: toTitle di
     ' ' -> True
     '_' -> True
     '-' -> True
+    '.' -> True
     _ -> False
   ) s
 
