@@ -39,6 +39,15 @@ signatoryField = Field {
   field_meta = ()
 }
 
+requestIdField :: Name -> Field_
+requestIdField name = Field {
+  field_name = "requestId",
+  field_type = Nominal $ "ContractId " <> name,
+  field_cardinality = single,
+  field_comment = noComment,
+  field_meta = ()
+}
+
 parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
 parseSwagger sw =
   pure $ Module name imports (defs ++ ops) (Comment desc)
@@ -71,7 +80,7 @@ parseResponses name r =
     return $ 
       [ TemplateType 
           typeName
-          [signatoryField, body]
+          [signatoryField, requestIdField name, body]
           (Signatory "requestor")
           noComment
         ,
