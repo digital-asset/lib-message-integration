@@ -11,6 +11,7 @@ import Control.Monad.Logger
 import Control.Monad.Reader
 import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
+import qualified Data.Set (Set, fromList, member)
 import Data.Text (Text, pack, unpack, split)
 import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems, mapKeys, fromList, toList)
 import Data.Hashable
@@ -194,9 +195,9 @@ swaggerToDamlType name SwaggerObject _ = (Nominal name, single)
 
 -- Also handles keywords.
 toCamelType :: String -> String
-toCamelType "type"= "Type_" --how to bind using '@' ? 
-toCamelType "data"= "Data_"
-toCamelType s = fold $ fmap (toTitle . unpack) $ split (\a -> case a of
+toCamelType s 
+   | s `Data.Set.member` reservedWords = toTitle s <> "_"
+   | otherwise = fold $ fmap (toTitle . unpack) $ split (\a -> case a of
     ' ' -> True
     '_' -> True
     '-' -> True
@@ -218,3 +219,79 @@ toTitle [] = []
 
 bimap :: (Eq k, Eq k', Hashable k, Hashable k') => (k -> k') -> (v -> v') -> InsOrdHashMap k v -> InsOrdHashMap k' v'
 bimap f g m = fromList (fmap (Data.Bifunctor.bimap f g) (toList m))
+
+
+-- Taken from `https://github.com/digital-asset/ghc/blob/da-master/compiler/parser/Lexer.x`
+reservedWords :: Data.Set.Set String
+reservedWords = 
+    Data.Set.fromList
+        ["_",
+         "as",
+         "case",
+         "class",
+         "data",
+         "default",
+         "deriving",
+         "do",
+         "else",
+         "hiding",
+         "if",
+         "import",
+         "in",
+         "infix",
+         "infixl",
+         "infixr",
+         "instance",
+         "let",
+         "module",
+         "newtype",
+         "of",
+         "qualified",
+         "then",
+         "type",
+         "where",
+         "forall", 
+         "mdo",
+         "with",
+         "family",
+         "role",
+         "pattern",
+         "static",
+         "stock",
+         "anyclass",
+         "via",
+         "group",
+         "by",
+         "using",
+         "foreign",
+         "export",
+         "label",
+         "dynamic",
+         "safe",
+         "interruptible",
+         "unsafe",
+         "stdcall",
+         "ccall",
+         "capi",
+         "prim",
+         "javascript",
+         "daml",
+         "template",
+         "can",
+         "ensure",
+         "signatory",
+         "agreement",
+         "controller",
+         "choice",
+         "observer",
+         "nonconsuming",
+         "preconsuming",
+         "postconsuming",
+         "key",
+         "maintainer",
+         "unit",
+         "dependency",
+         "signature",
+         "rec",
+         "proc"
+     ]
