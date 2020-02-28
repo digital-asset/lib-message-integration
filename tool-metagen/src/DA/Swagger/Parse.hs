@@ -184,7 +184,8 @@ swaggerToDamlType name SwaggerArray (Just (SwaggerItemsObject (Inline schem))) =
   (fst (swaggerToDamlType name (schem ^. type_ . to (fromMaybe SwaggerString)) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsObject (Ref (Reference { getReference = ref } ) ))) = 
   (Nominal . toCamelType . unpack $ ref, many)
-swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsPrimitive _ _)) = error "Type 'array' (primitive) not implemented"
+swaggerToDamlType name SwaggerArray (Just (SwaggerItemsPrimitive _fmt schem)) = 
+  (fst (swaggerToDamlType name (schem ^. type_ . to (fromMaybe SwaggerString)) (schem ^. items)) , many)
 swaggerToDamlType _ SwaggerArray (Just (SwaggerItemsArray _)) = error "Type 'array' (heterogenous) not supported"
 swaggerToDamlType _ SwaggerArray Nothing = (Prim PrimText, many) -- Use this as it apperas in query params mainly. Consider (Nominal "a", many). 
 swaggerToDamlType _ SwaggerFile _ = error "Type 'file' not implemented yet"
