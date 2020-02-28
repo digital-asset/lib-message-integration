@@ -80,7 +80,7 @@ parseResponses name r =
     return $ 
       [ TemplateType 
           typeName
-          [signatoryField, requestIdField name, body]
+          [signatoryField, requestIdField $ toCamelType name, body]
           (Signatory "requestor")
           noComment
         ,
