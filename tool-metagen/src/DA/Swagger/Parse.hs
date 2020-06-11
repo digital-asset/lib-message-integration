@@ -13,7 +13,7 @@ import Control.Monad.State (State, runState, execState, modify)
 import Data.Swagger
 import qualified Data.Set (Set, fromList, member)
 import Data.Text (Text, pack, unpack, split)
-import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems, mapKeys, fromList, toList)
+import Data.HashMap.Strict.InsOrd (InsOrdHashMap, insert, traverseWithKey, empty, elems, mapKeys, fromList, toList, lookup)
 import Data.Hashable
 import Data.Maybe (fromMaybe)
 import Data.Foldable (fold)
@@ -51,10 +51,11 @@ requestIdField name = Field {
 
 parseSwagger :: (MonadLogger m, MonadIO m) => Swagger -> m (Module ())
 parseSwagger sw =
-  pure $ Module name imports (defs ++ ops) (Comment desc)
+  pure $ Module name imports (params ++ defs ++ ops) (Comment desc)
     where 
       name = sw ^. info . title . to (toCamelType . unpack)
       imports = []
+      params = parseParams sw
       defs = parseDefns sw
       ops = parseOps sw
       desc = sw ^. info . description . to (fmap unpack) --TODO: seems the comment is not included in the output file.
@@ -110,9 +111,17 @@ parseResponses name r =
                 field_comment = noComment,
                 field_meta = ()
              }
-    parseBody _ (Ref _) = undefined
- 
+    parseBody code (Ref (Reference {getReference})) = 
+      pure $ Field {
+                field_name = code,
+                field_type = Nominal (takeBaseName (unpack getReference)),
+                field_cardinality = single,
+                field_comment = noComment,
+                field_meta = ()
+             }
+
 parseParam :: String -> Referenced Param -> SymbolState Field_
+--TODO: in case this is in the `parameters section` i.e. for inlining, then insert into symbol table.
 parseParam opName (Inline param) = case param ^. schema of
   ParamBody s -> parseSchema (param ^. name . to (\x -> opName </> unpack x)) s
   ParamOther pos ->
@@ -128,8 +137,18 @@ parseParam opName (Inline param) = case param ^. schema of
         cardinality' 
         (Comment $ param ^. description . to (fmap unpack))
         ()
-parseParam _opName (Ref (Reference _path)) = undefined
+parseParam opName (Ref (Reference path)) =
+  pure $ Field {
+    field_name = toCamelVal nm,
+    field_type = Nominal $ toCamelType nm,
+    field_cardinality = single,
+    field_comment = noComment,
+    field_meta = ()
+  } where nm = takeBaseName . unpack $ path
     
+parseParams :: Swagger -> [ Decl () ]
+parseParams s = elems (execState (traverseWithKey parseParam (DA.Swagger.Parse.bimap unpack Inline (s ^. parameters))) empty) 
+
 parseDefns :: Swagger -> [ Decl () ]
 parseDefns s = elems (execState (traverseWithKey parseSchema (DA.Swagger.Parse.bimap unpack Inline (s ^. definitions))) empty) 
 
