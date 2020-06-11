@@ -19,7 +19,7 @@ import Data.Maybe (fromMaybe)
 import Data.Foldable (fold)
 import Data.Bifunctor
 import Prelude hiding (words, lookup)
-import System.FilePath
+import System.FilePath.Posix -- We are using this for handling paths inside JSON files - not file paths.
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
 import qualified Data.Char (toLower, toUpper)
