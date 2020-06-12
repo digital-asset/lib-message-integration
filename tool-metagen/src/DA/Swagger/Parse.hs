@@ -19,7 +19,7 @@ import Data.Maybe (fromMaybe)
 import Data.Foldable (fold)
 import Data.Bifunctor
 import Prelude hiding (words, lookup)
-import System.FilePath.Posix -- We are using this for handling paths inside JSON files - not file paths.
+import System.FilePath.Posix -- We are using this for handling paths in JSON - not file paths, so this should not be platform specific.
 import Control.Lens
 import GHC.Base ((<|>)) -- Alternative
 import qualified Data.Char (toLower, toUpper)
@@ -121,22 +121,26 @@ parseResponses name r =
              }
 
 parseParam :: String -> Referenced Param -> SymbolState Field_
---TODO: in case this is in the `parameters section` i.e. for inlining, then insert into symbol table.
 parseParam opName (Inline param) = case param ^. schema of
   ParamBody s -> parseSchema (param ^. name . to (\x -> opName </> unpack x)) s
-  ParamOther pos ->
+  ParamOther pos -> do
     let (type', cardinality') = 
            swaggerToDamlType 
              (param ^. name . to (toCamelType . unpack))
              (pos ^. paramSchema . type_ . to (fromMaybe SwaggerString)) -- Return untyped string value by default.
              (pos ^. paramSchema . items)
-    in pure $
-      Field 
-        (param ^. name . to (toCamelVal . unpack))
-        type'  
-        cardinality' 
-        (Comment $ param ^. description . to (fmap unpack))
-        ()
+    modify $ case type' of
+      Prim _ -> if cardinality' == single 
+                then insert opName (NewType (toCamelType opName) type' noComment)
+                else error $ "Unimplemented: dereferenced parameters with arity > 1 e.g. array/optional: " <> opName
+      _ -> error $ "Expected a single field declaration for param " <> opName
+    pure $ Field {
+      field_name = (param ^. name . to (toCamelVal . unpack)),
+      field_type = type',
+      field_cardinality = cardinality',
+      field_comment = (Comment $ param ^. description . to (fmap unpack)),
+      field_meta = ()
+    }
 parseParam opName (Ref (Reference path)) =
   pure $ Field {
     field_name = toCamelVal nm,
@@ -153,7 +157,7 @@ parseDefns :: Swagger -> [ Decl () ]
 parseDefns s = elems (execState (traverseWithKey parseSchema (DA.Swagger.Parse.bimap unpack Inline (s ^. definitions))) empty) 
 
 parseSchema :: FilePath -> Referenced Schema -> SymbolState Field_
-parseSchema fieldPath (Inline s) = 
+parseSchema fieldPath (Inline s) =
   do 
     let typeName = toCamelType fieldPath
         valName = toCamelVal $ takeBaseName fieldPath 
