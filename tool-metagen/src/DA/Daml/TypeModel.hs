@@ -56,7 +56,8 @@ getTypeName (EnumType n _ _)    = Just n
 getTypeName (RecordType n _ _)  = Just n
 getTypeName (VariantType n _ _) = Just n
 getTypeName (NewType n _ _)     = Just n
-getTypeName _ = Nothing
+getTypeName (TemplateType n _ _ _) = Just n
+getTypeName (InlineComment _) = Nothing
 
 data Field a = Field
     { field_name        :: Name
