@@ -6,6 +6,7 @@ daml 1.2
 module FpML.V510.Confirmation
   ( module FpML.V510.Confirmation ) where
 
+import Prelude hiding (String)
 
 -- | The acceptable tolerance in the delivered quantity of
 --   a physical commodity product in terms of a number of
