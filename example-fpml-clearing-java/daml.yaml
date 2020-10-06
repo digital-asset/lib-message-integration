@@ -1,0 +1,22 @@
+sdk-version: 1.5.0
+name: fpml-clearing-demo
+source: daml
+init-script: Main:init
+parties:
+  - OPERATOR
+  - SEFCORP
+  - CLEARCO
+  - ABC_IM
+  - DEF_IM
+  - XYZ_BANK
+  - QLM_BANK
+  - DEALER-D01
+  - DEALER-D02
+  - REUTERS
+version: 0.0.1
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+sandbox-options:
+  - --wall-clock-time
