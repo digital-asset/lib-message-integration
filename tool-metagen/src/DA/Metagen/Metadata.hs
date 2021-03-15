@@ -1,7 +1,6 @@
 -- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: Apache-2.0
 
-{-# LANGUAGE DisambiguateRecordFields #-}
 {-# LANGUAGE DuplicateRecordFields #-}
 
 -- | Types and functions for generating JSON-based encoder/decoder metadata.
@@ -126,7 +125,7 @@ genDecls env = concatMap genDecl
         [TypeDecl RecordDecl (T.pack name) (map (genField env) fields)]
 
     genDecl (VariantType name fields _comment) =
-        [TypeDecl VariantDecl (T.pack name) (map (genField env) $ map prefix fields)]
+        [TypeDecl VariantDecl (T.pack name) (map (genField env . prefix) fields)]
       where
         prefix f = f {field_name = name ++ "_" ++ field_name f }
 

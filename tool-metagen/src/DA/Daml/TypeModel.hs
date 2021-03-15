@@ -234,7 +234,7 @@ flattenNestedSums p = map decl
 
     field f = f { field_type = types (field_type f) }
 
-    types (Sum fs) = Sum $ concatMap extract $ map field fs
+    types (Sum fs) = Sum $ concatMap (extract . field) fs
     types (Product fs)  = Product $ map field fs
     types n = n
 
@@ -262,7 +262,7 @@ gatherReferencedDecls allDecls topName =
                   (VariantType   _ fs _) -> fields fs
                   --(ExtendType    _ _  fs1 fs2 _) -> fields fs1 <> fields fs2
                   _ -> []
-              deps = mapMaybe (\n -> Map.lookup n allDecls) names
+              deps = mapMaybe (`Map.lookup` allDecls) names
           in List.foldl' go (Map.insert name d m) deps
         | otherwise = m
 
