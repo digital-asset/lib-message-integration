@@ -20,8 +20,7 @@ ppModule Module{..} =
         $$ text "module" <+> text module_name
         $$ nest 2 (text "( module" <+> text module_name <+> text ") where")
         $$ ppImports module_imports
-        $$ text "import qualified Prelude"
-        $$ text "import Prelude ( Eq, Ord, Show, " <> text primitiveImports <> text ")"
+        $$ text "import Prelude ( Eq, Ord, Show, Optional, " <> text primitiveImports <> text " )"   -- Detecting Optional is a bit more onerous
         $$ text ""
         $$ ppDecls module_decls
 
