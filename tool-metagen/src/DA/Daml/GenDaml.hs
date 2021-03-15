@@ -39,7 +39,7 @@ ppDecl (EnumType name constrs comment) =
         $$ nest 4 (ppBlock "=" "|" "deriving (Eq, Ord, Show)" ppConstr constrs)
   where
     ppConstr (cname, _, comment')
-        = (text name <> text "_" <> text cname <> text " ()")
+        = (text name <> text "_" <> text cname)
               $$ ppComment After comment'
 
 ppDecl (RecordType name fields comment) =
