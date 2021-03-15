@@ -67,8 +67,8 @@ ppDecl (VariantType name fields comment)
 -- For now, emit as type synonyms
 ppDecl (NewType name base comment) =
     ppComment Before comment
-    -- $$ text "newtype" <+> text name <+> text "=" <+> text name <+> ppType single id base
-    --     $$ nest 4 (text "deriving (Eq, Ord, Show)")
+    {-- $$ text "newtype" <+> text name <+> text "=" <+> text name <+> ppType single id base
+    --     $$ nest 4 (text "deriving (Eq, Ord, Show)") -}
     $$ text "type" <+> text name <+> text "=" <+> ppType single id base
 
 ppDecl d = text $ "-- UNSUPPORTED: " ++ show d
