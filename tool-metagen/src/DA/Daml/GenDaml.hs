@@ -72,7 +72,7 @@ ppDecl (NewType name base comment) =
     $$ text "type" <+> text name <+> text "=" <+> ppType single id base
 
 -- Added for Swagger
-ppDecl (TemplateType name fields (Signatory sig) comment) = 
+ppDecl (TemplateType name fields (Signatory sig) comment) =
   ppComment Before comment
   $$ text "template" <+> text name <+> text "with"
       $$ nest 4 (ppRecordFields fields)

@@ -35,7 +35,7 @@ import qualified Data.Map                   as Map
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
-import           Data.Semigroup             (Semigroup, (<>))
+import           Data.Semigroup             ((<>))
 import           Data.Version               (showVersion)
 import           Options.Applicative
 import           Options.Applicative.Types  (readerAsk, readerError)
@@ -351,12 +351,12 @@ runSwagger Options{..} inputFile = do
   let damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
   schema <- readSwagger inputFile
   mod <- parseSwagger schema
-  let damlOutFile = damlOutDir </> (module_name mod) ++ ".daml"
+  let damlOutFile = damlOutDir </> module_name mod ++ ".daml"
   writeDaml damlOutFile mod
 
 -- Parses JSON into a data type
 readSwagger :: (MonadLogger m, MonadIO m) => FilePath -> m Swagger
-readSwagger file = do 
+readSwagger file = do
   eitherSchema <- liftIO $ Aeson.eitherDecodeFileStrict' file
   case eitherSchema of
     Right s -> do
@@ -365,4 +365,4 @@ readSwagger file = do
     Left err -> do
       logErrorN $ T.pack file <> " : FAILED TO PARSE : " <> T.pack (show err)
       liftIO exitFailure
-   
+

@@ -163,13 +163,14 @@ gatherImports s =
     [ (include_schemaLocation, Nothing)
     | (SchemaItem_Include Include{..}) <- schema_items s
     ] -- ++
-    -- NOTE: only fpml-msg-5-10.xsd currently uses import:
-    -- <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd" />
-    -- it contains qnames with a "sig" prefix.
-    -- [ (import_schemaLocation, ns)
-    -- | (SchemaItem_Import  Import{..}) <- schema_items s
-    -- , let ns = targetPrefix (Just import_namespace) (schema_namespaces s)
-    -- ]
+    {- NOTE: only fpml-msg-5-10.xsd currently uses import:
+       <xsd:import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd" />
+       it contains qnames with a "sig" prefix.
+       [ (import_schemaLocation, ns)
+       | (SchemaItem_Import  Import{..}) <- schema_items s
+       , let ns = targetPrefix (Just import_namespace) (schema_namespaces s)
+       ]
+    -}
 
 -- | Metadata describing top-level elements and types.
 mkXmlTopLevelMeta :: Env -> Schema -> XmlTopLevelMeta QName (Type XmlMeta)
@@ -203,13 +204,13 @@ getElementType
 
 convert :: Name -> Schema -> Conv (Model.Module XmlMeta)
 convert name Schema{..} = do
-    decls <- fmap
-           ( Model.ensureUniqueFieldNames
+    decls <-
+           Model.ensureUniqueFieldNames
            . Model.renameFields renameRecField renameVarField
            . Model.typeLift
            . Model.flattenNestedSums (==XmlChoice)
-           . concat)
-           $ mapM convItem schema_items
+           . concat
+           <$> mapM convItem schema_items
 
     return Model.Module
         { module_name      = name    -- fully qualified
@@ -260,7 +261,7 @@ convSimpleType defName s = do
           case simple_item s of
               Restricted (Restriction ann (Just base) (Nothing, _facets)) -> do
                    let name    = fromMaybe defName $ simple_name s
-                       comment = mkComment $ (simple_annotation s) <> ann
+                       comment = mkComment $ simple_annotation s <> ann
                    return [ Model.NewType (convTypeName name) (mkFieldType base) comment ]
               Restricted r  -> error $ "convSimpleType: unsupported: "++ show r
               UnionOf as es -> do
@@ -354,8 +355,8 @@ convComplexType defName c
           -- all the elements that have this type
           elemNames  <- fromMaybe [] <$> lookupFrom env_typeToElem ty
           -- all the substitutions
-          subsNames <- (concatMap $ fromMaybe []) <$> mapM (lookupFrom env_substGrps) elemNames
-          subsElems <- (map $ fromMaybe err1) <$> mapM (lookupFrom env_element) subsNames
+          subsNames <- concatMap (fromMaybe []) <$> mapM (lookupFrom env_substGrps) elemNames
+          subsElems <- map (fromMaybe err1) <$> mapM (lookupFrom env_element) subsNames
           return
               [ (name, ty)
               | (name, elem) <- zip subsNames subsElems
@@ -428,7 +429,7 @@ mkFieldsFromElems (Elements_Element e) = do
                           fields <- maybe (return []) mkFieldsFromContent (element_content e)
                           -- avoid creating a product type with a single field of choice type
                           return $ case fields of
-                              [Model.Field _ (ty@Sum{}) card _ XmlChoice]
+                              [Model.Field _ ty@Sum{} card _ XmlChoice]
                                   | card == Model.single -> ty
                               _ -> Model.Product fields
 
