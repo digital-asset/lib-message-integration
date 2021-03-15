@@ -15,6 +15,8 @@ import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 type Name = String
 
@@ -48,6 +50,14 @@ data Decl a
     | InlineComment String
     deriving (Eq, Show)
 
+usedPrimitives :: Set PrimType -> Decl a -> Set PrimType
+usedPrimitives s EnumType {}               = s
+usedPrimitives s (RecordType _ fs _)       = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitives s (VariantType _ fs _)      = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitives s (NewType _ t _)           = usedPrimitivesInType s t
+usedPrimitives s (TemplateType _ fs _ _)   = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitives s (InlineComment _)         = s
+
 newtype Signatory = Signatory { toString :: String }
   deriving (Eq, Show)
 
@@ -68,6 +78,9 @@ data Field a = Field
     }
     deriving (Eq, Ord, Show)
 
+addUsedPrimitiesInFieldToSet :: Set PrimType -> Field a -> Set PrimType
+addUsedPrimitiesInFieldToSet s Field {field_type} = usedPrimitivesInType s field_type
+
 -- | Primitive or structural type (anonymous)
 -- NOTE: Structural types are currently eliminated, but this decision may
 -- be revisted in some cases, e.g. simple pairs.
@@ -81,6 +94,14 @@ data Type a
     -- XSD and CDM Rosetta.
     -- Extend  [Field a] (Type a)
     deriving (Eq, Ord, Show)
+
+usedPrimitivesInType :: Set PrimType -> Type a -> Set PrimType
+usedPrimitivesInType s (Prim t)        = Set.insert t s
+usedPrimitivesInType s (Nominal _)     = s
+usedPrimitivesInType s (Enum _)        = s
+usedPrimitivesInType s (Product fs)    = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitivesInType s (Sum fs)        = List.foldl' addUsedPrimitiesInFieldToSet s fs
+
 
 data PrimType
     = PrimText
