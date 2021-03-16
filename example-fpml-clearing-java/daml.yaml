@@ -1,7 +1,7 @@
 sdk-version: 1.11.0
 name: fpml-clearing-demo
 version: 0.0.1
-scenario: Main:init
+init-script: Main:init
 source: daml/Main.daml
 parties:
   - OPERATOR
@@ -17,3 +17,4 @@ parties:
 dependencies:
   - daml-prim
   - daml-stdlib
+  - daml-script

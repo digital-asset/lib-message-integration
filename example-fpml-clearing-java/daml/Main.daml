@@ -9,35 +9,42 @@ import Role.ClearingHouse
 import Role.ClearingMember
 import Role.Client
 
-init = scenario do
-  operator <- getParty "OPERATOR"
-  ccp      <- getParty "CLEARCO"
+import Daml.Script
+
+getPartyCmd : Text -> Script Party
+getPartyCmd who = do
+  allocatePartyWithHint who (PartyIdHint who)
+
+init : Script ()
+init = do
+  operator <- getPartyCmd "OPERATOR"
+  ccp      <- getPartyCmd "CLEARCO"
 
   -- Bootstrap clearing house
-  opRole <- submit operator do    create OperatorRole with operator
-  ccpInvite <- submit operator do exercise opRole InviteClearingHouse with house = ccp
-  ccpContract <- submit ccp do    exercise ccpInvite ClearingHouse_Accept
+  opRole <- submit operator do    createCmd OperatorRole with operator
+  ccpInvite <- submit operator do exerciseCmd opRole InviteClearingHouse with house = ccp
+  ccpContract <- submit ccp do    exerciseCmd ccpInvite ClearingHouse_Accept
 
   -- Clearing house invites two members
-  member1 <- getParty "XYZ_BANK"
-  member2 <- getParty "QLM_BANK"
-  memberInvite1 <- submit ccp do exercise ccpContract InviteClearingMember with member = member1
-  memberInvite2 <- submit ccp do exercise ccpContract InviteClearingMember with member = member2
+  member1 <- getPartyCmd "XYZ_BANK"
+  member2 <- getPartyCmd "QLM_BANK"
+  memberInvite1 <- submit ccp do exerciseCmd ccpContract InviteClearingMember with member = member1
+  memberInvite2 <- submit ccp do exerciseCmd ccpContract InviteClearingMember with member = member2
 
   -- Members accept invites
-  memberContract1 <- submit member1 do exercise memberInvite1 ClearingMember_Accept
-  memberContract2 <- submit member2 do exercise memberInvite2 ClearingMember_Accept
+  memberContract1 <- submit member1 do exerciseCmd memberInvite1 ClearingMember_Accept
+  memberContract2 <- submit member2 do exerciseCmd memberInvite2 ClearingMember_Accept
 
   -- Member1 onboards client1 as a client
-  client1 <- getParty "ABC_IM"
-  clientInvite1 <- submit member1 do exercise memberContract1 InviteClient with client = client1
+  client1 <- getPartyCmd "ABC_IM"
+  clientInvite1 <- submit member1 do exerciseCmd memberContract1 InviteClient with client = client1
 
   -- Member2 onboards client2 as a client
-  client2 <- getParty "DEF_IM"
-  clientInvite2 <- submit member2 do exercise memberContract2 InviteClient with client = client2
+  client2 <- getPartyCmd "DEF_IM"
+  clientInvite2 <- submit member2 do exerciseCmd memberContract2 InviteClient with client = client2
 
   -- clients sign contracts
-  clientContract1 <- submit client1 do exercise clientInvite1 Client_Accept
-  clientContract2 <- submit client2 do exercise clientInvite2 Client_Accept
+  clientContract1 <- submit client1 do exerciseCmd clientInvite1 Client_Accept
+  clientContract2 <- submit client2 do exerciseCmd clientInvite2 Client_Accept
 
-  return ()
+  pure ()
