@@ -1,9 +1,9 @@
--- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- Copyright (c) 2019-2021 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: Apache-2.0
 
 {-# LANGUAGE FlexibleContexts #-}
 
-daml 1.2
+
 module Process.Novation where
 
 import qualified FpML.V510.Confirmation as FpML
