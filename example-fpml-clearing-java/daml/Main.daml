@@ -10,10 +10,14 @@ import Role.ClearingHouse
 import Role.ClearingMember
 import Role.Client
 
+getPartyCmd : Text -> Script Party
+getPartyCmd who = do
+  allocatePartyWithHint who (PartyIdHint who)
+
 init : Script ()
-init = script do
-  operator <- allocatePartyWithHint "OPERATOR" $ PartyIdHint with partyIdHint = "OPERATOR"
-  ccp      <- allocatePartyWithHint "CLEARCO" $ PartyIdHint with partyIdHint = "CLEARCO"
+init = do
+  operator <- getPartyCmd "OPERATOR"
+  ccp      <- getPartyCmd "CLEARCO"
 
   -- Bootstrap clearing house
   opRole <- submit operator do    createCmd OperatorRole with operator
@@ -21,8 +25,8 @@ init = script do
   ccpContract <- submit ccp do    exerciseCmd ccpInvite ClearingHouse_Accept
 
   -- Clearing house invites two members
-  member1 <- allocatePartyWithHint "XYZ_BANK" $ PartyIdHint with partyIdHint = "XYZ_BANK"
-  member2 <- allocatePartyWithHint "QLM_BANK" $ PartyIdHint with partyIdHint = "QLM_BANK"
+  member1 <- getPartyCmd "XYZ_BANK"
+  member2 <- getPartyCmd "QLM_BANK"
   memberInvite1 <- submit ccp do exerciseCmd ccpContract InviteClearingMember with member = member1
   memberInvite2 <- submit ccp do exerciseCmd ccpContract InviteClearingMember with member = member2
 
@@ -31,15 +35,15 @@ init = script do
   memberContract2 <- submit member2 do exerciseCmd memberInvite2 ClearingMember_Accept
 
   -- Member1 onboards client1 as a client
-  client1 <- allocatePartyWithHint "ABC_IM" $ PartyIdHint with partyIdHint = "ABC_IM"
+  client1 <- getPartyCmd "ABC_IM"
   clientInvite1 <- submit member1 do exerciseCmd memberContract1 InviteClient with client = client1
 
   -- Member2 onboards client2 as a client
-  client2 <- allocatePartyWithHint "DEF_IM" $ PartyIdHint with partyIdHint = "DEF_IM"
+  client2 <- getPartyCmd "DEF_IM"
   clientInvite2 <- submit member2 do exerciseCmd memberContract2 InviteClient with client = client2
 
   -- clients sign contracts
   clientContract1 <- submit client1 do exerciseCmd clientInvite1 Client_Accept
   clientContract2 <- submit client2 do exerciseCmd clientInvite2 Client_Accept
 
-  return ()
+  pure ()

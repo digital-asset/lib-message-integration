@@ -4,7 +4,7 @@
 
 module Role.ClearingMember where
 
-import qualified DA.Next.Map as Map
+import qualified DA.Map as Map
 import qualified FpML.V510.Confirmation as FpML
 import Role.Client
 import Util.Messages
