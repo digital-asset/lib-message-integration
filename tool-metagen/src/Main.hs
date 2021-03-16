@@ -33,10 +33,7 @@ import qualified Data.Map                   as Map
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
-<<<<<<< HEAD
-=======
 import           Data.Semigroup             ((<>))
->>>>>>> ed64222 (Pacify linter and compilation warnings.)
 import           Data.Version               (showVersion)
 import           Options.Applicative
 import           Options.Applicative.Types  (readerAsk, readerError)
@@ -330,30 +327,3 @@ getDependencies schemas fp = Set.delete fp $ go mempty fp
           in List.foldl' go (Set.insert fp fps) deps
         | otherwise = fps
     getDeps s = Set.fromList . map fst $ XSD.gatherImports s
-<<<<<<< HEAD
-=======
-
---------------------------------------------------------------------------------
--- Swagger Support
-
-runSwagger :: Options -> FilePath -> LoggingT IO ()
-runSwagger Options{..} inputFile = do
-  let damlOutDir = optOutputDir </> "daml" </> packageToPath optDamlPackage
-  schema <- readSwagger inputFile
-  mod <- parseSwagger schema
-  let damlOutFile = damlOutDir </> module_name mod ++ ".daml"
-  writeDaml damlOutFile mod
-
--- Parses JSON into a data type
-readSwagger :: (MonadLogger m, MonadIO m) => FilePath -> m Swagger
-readSwagger file = do
-  eitherSchema <- liftIO $ Aeson.eitherDecodeFileStrict' file
-  case eitherSchema of
-    Right s -> do
-      logDebugN $ T.pack file <> " : successfully parsed"
-      return s
-    Left err -> do
-      logErrorN $ T.pack file <> " : FAILED TO PARSE : " <> T.pack (show err)
-      liftIO exitFailure
-
->>>>>>> ed64222 (Pacify linter and compilation warnings.)
