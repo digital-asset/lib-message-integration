@@ -22,7 +22,7 @@ This example shows a simple FpML-based workflow orchestrated via DAML. It shows 
 
 To build the example:
 ```
-da compile
+daml build
 ```
 To generate HTML documentation for the FpML DAML sources:
 ```
