@@ -24,11 +24,11 @@ To build the example:
 ```
 daml build
 ```
-To generate HTML documentation for the FpML DAML sources:
+To generate Markdown documentation for the FpML DAML sources:
 ```
-da run damlc -- docs -o target -f Html daml/FpML/V510/Confirmation.daml
+daml damlc docs -o target daml/FpML/V510/Confirmation.daml
 ```
-You can the open `target/FpML-V510-Confirmation.html` to browse the documentation.
+You can the open `target/FpML-V510-Confirmation.md` to browse the documentation.
 
 ## Running
 From the example root directory:
