@@ -33,7 +33,7 @@ You can the open `target/FpML-V510-Confirmation.md` to browse the documentation.
 ## Running
 From the example root directory:
 ```
-da start sandbox
+daml start
 cd app
 sbt "runMain com.digitalasset.app.Bots"
 ```
