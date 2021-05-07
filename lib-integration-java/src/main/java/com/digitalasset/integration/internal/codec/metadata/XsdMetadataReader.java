@@ -10,7 +10,8 @@ package com.digitalasset.integration.internal.codec.metadata;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.grpc.internal.IoUtils;
+//import io.grpc.internal.IoUtils;
+import com.google.common.io.ByteStreams;
 import io.vavr.collection.Stream;
 
 import java.io.IOException;
@@ -32,7 +33,8 @@ public class XsdMetadataReader extends MetadataReader<XmlFieldMeta, XmlTopLevelM
         URLConnection urlConnection = url.openConnection();
         InputStream is = urlConnection.getInputStream();
         if (is != null) {
-           return new XsdMetadata(new XsdMetadataReader().fromJSON(IoUtils.toByteArray(is)));
+           //return new XsdMetadata(new XsdMetadataReader().fromJSON(IoUtils.toByteArray(is)));
+           return new XsdMetadata(new XsdMetadataReader().fromJSON(ByteStreams.toByteArray(is)));
         }
         throw new IllegalStateException("Could not load resource from url: "+url);
     }

@@ -219,7 +219,8 @@ simpleType = do
       unionOf  = do
           e  <- xsdElement "union"
           XSD.UnionOf
-              <$> attribute (mkQName "memberTypes") (many qname) e
+              -- <$> attribute (mkQName "memberTypes") (many qname) e
+              <$> attributeO (mkQName "memberTypes") (many qname) e
               <*> recurseWith (xsdTag "simpleType") (many simpleType) (elContent e)
 
 restriction :: XMLParser t -> XMLParser (XSD.Restriction t)
@@ -477,6 +478,15 @@ attribute qn p (Element n as _ _) =
          Just av  -> do
              namespaces <- getState
              either (fail . show) return $ runParser p namespaces (show qn) av
+
+attributeO :: Monoid a => QName -> TextParser a -> Element -> XMLParser a
+attributeO qn p (Element n as _ _) =
+    case XML.lookupAttr qn as of
+         Nothing  -> do return mempty
+         Just av  -> do
+             namespaces <- getState
+             either (fail . show) return $ runParser p namespaces (show qn) av
+
 
 -- | Parse an XML textual boolean, i.e. "true", "false", "0", or "1"
 bool :: TextParser Bool

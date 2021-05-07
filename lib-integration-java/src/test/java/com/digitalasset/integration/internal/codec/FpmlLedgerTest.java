@@ -21,9 +21,11 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 
+import com.daml.ledger.javaapi.data.Record;
 import com.daml.ledger.javaapi.data.*;
 
 import static java.util.Arrays.asList;
@@ -40,7 +42,7 @@ public class FpmlLedgerTest {
     private final String HOST = "localhost";
     private final int PORT = 7600;
 
-    @Ignore("requires a running sandbox") 
+    @Ignore("requires a running sandbox")
     @Test
     public void setup() {
         Properties props = System.getProperties();
@@ -70,8 +72,9 @@ public class FpmlLedgerTest {
                 APP_ID,
                 UUID.randomUUID().toString(),
                 SUBMITTER,
-                Instant.now(),
-                Instant.now().plusSeconds(25),
+                Optional.of(Instant.now()),
+                Optional.of(Duration.ofSeconds(25)),
+                Optional.of(Duration.ofSeconds(25)),
                 Collections.singletonList(createCmd)).blockingGet();
 
         // show transactions
@@ -137,8 +140,9 @@ public class FpmlLedgerTest {
                 APP_ID,
                 UUID.randomUUID().toString(),
                 SUBMITTER,
-                Instant.now(),
-                Instant.now().plusSeconds(25),
+                Optional.of(Instant.now()),
+                Optional.of(Duration.ofSeconds(25)),
+                Optional.of(Duration.ofSeconds(25)),
                 Collections.singletonList(msgCmd));
 
          // show active contracts
