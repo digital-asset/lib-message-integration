@@ -375,7 +375,7 @@ convComplexType defName c
       -- NOTE: This is recursive. We collect all the transitive subtypes
       -- and flatten the hierarchy, this is consistent with inlining all supertype
       -- fields into records, instead of using composition. The result is smaller
-      -- and simpler DAML-LF values; at the expense of larger types.
+      -- and simpler Daml-LF values; at the expense of larger types.
       getSubTypes :: QName -> Conv [QName]
       getSubTypes ty = do
           requireVariant <- asks $ Set.member ty . env_baseTy
@@ -478,7 +478,7 @@ mkFieldsFromElems (Elements_Group ModelGroup{..}) =
                     logWarnN $ "Skipping " <> T.pack (show ref)
                     return []
 mkFieldsFromElems Elements_Any          =
-    -- Due to currently no support for ExistentialTypes in DAML, we support xsd:any using a text type.
+    -- Due to currently no support for ExistentialTypes in Daml, we support xsd:any using a text type.
     return [Model.Field "any" (Prim PrimText) Model.single Model.noComment XmlAny]
 
 mkFieldsFromElems e@Elements_All{}      = error $ "mkFieldsFromElems: unsupported: " ++ show e
@@ -682,7 +682,7 @@ mkFieldType QName{..} =
         "base64Binary"       | isXsd -> Prim PrimText
         "language"           | isXsd -> Prim PrimText
 
-        -- These temporal XSD types are not currently mapped to any DAML temporal
+        -- These temporal XSD types are not currently mapped to any Daml temporal
         -- types, but instead left as strings, for now.
         "time"               | isXsd -> Prim PrimText
         "gYearMonth"         | isXsd -> Prim PrimText

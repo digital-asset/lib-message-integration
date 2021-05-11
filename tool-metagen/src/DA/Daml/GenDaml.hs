@@ -10,7 +10,7 @@ import           Text.PrettyPrint.HughesPJ as PP
 import qualified Data.List as List
 import qualified Data.Set as Set
 
--- | Convert from the TypeModel to a DAML source text.
+-- | Convert from the TypeModel to a Daml source text.
 ppModule :: Show a => Module a -> Doc
 ppModule Module{..} =
     let primitiveTypes = List.foldl' usedPrimitives Set.empty module_decls
@@ -67,7 +67,7 @@ ppDecl (VariantType name fields comment)
         text name <> text "_" <> text field_name <+> ppType field_cardinality parens field_type
             $$ ppComment After field_comment
 
--- TODO The DAML-LF story on these is not yet clear.
+-- TODO The Daml-LF story on these is not yet clear.
 -- For now, emit as type synonyms
 ppDecl (NewType name base comment) =
     ppComment Before comment

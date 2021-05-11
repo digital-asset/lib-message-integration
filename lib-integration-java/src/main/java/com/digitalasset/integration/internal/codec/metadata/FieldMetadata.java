@@ -21,7 +21,7 @@ public class FieldMetadata<SrcMeta> {
     private final SrcMeta srcMeta;
 
     // Both many and many1 map to lists, so we also track cardinality here, not
-    // just in the DAML types.
+    // just in the Daml types.
     public enum Cardinality {
         OPTIONAL, SINGLE, MANY, MANY1
     }

@@ -64,7 +64,7 @@ public abstract class MetadataReader<A, B> {
     }
 
     private DamlType applyCardinality(DamlType type, FieldMetadata.Cardinality card) {
-        // adjust the DAML type to match the cardinality
+        // adjust the Daml type to match the cardinality
         switch (card) {
             case MANY : return DamlTypes.list(type);
             case MANY1 : return DamlTypes.list(type);

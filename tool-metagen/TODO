@@ -2,5 +2,5 @@
 
 - XSD support is lacking some basic functionality not used in FpML and FIXML, e.g.
       - namespace support, e.g. xmlsig
-- generated DAML files are two big, how can we split them up? Does DAML need forward-declarations / bootstrap modules?
+- generated Daml files are two big, how can we split them up? Does Daml need forward-declarations / bootstrap modules?
 - don't hard code "deriving (Eq, Ord, Show)", allow user to parse in class names to derive
