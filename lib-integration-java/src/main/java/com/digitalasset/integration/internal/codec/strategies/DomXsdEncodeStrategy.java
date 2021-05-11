@@ -40,7 +40,7 @@ import javax.xml.parsers.ParserConfigurationException;
 import static java.lang.String.format;
 
 /**
- * Render XML using the provided DAML-LF Value and XSD metadata.
+ * Render XML using the provided Daml-LF Value and XSD metadata.
  */
 public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
 
@@ -109,7 +109,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
             // in the buildChildElements() method.
             throw new CodecException("List should never be passed to populateElement()");
         } else {
-            throw new CodecException("Unsupported DAML Value type: " + damlType.toString());
+            throw new CodecException("Unsupported Daml Value type: " + damlType.toString());
         }
     }
 

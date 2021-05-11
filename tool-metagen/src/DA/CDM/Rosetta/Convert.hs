@@ -21,7 +21,7 @@ import           Prelude               hiding (Enum)
 type Name = String
 type Conv = ReaderT Env (LoggingT IO)
 
--- | Contain the original name(s) with may differ from the DAML names.
+-- | Contain the original name(s) with may differ from the Daml names.
 -- Multiple names imply that we expect one of a variety of possible names for
 -- this field, e.g. issuer and issuerReference.
 data CdmMeta
@@ -199,7 +199,7 @@ convType (Just idn) =
         "boolean"       -> Prim PrimBool
         "string"        -> Prim PrimText
         "date"          -> Prim PrimDate
-        "time"          -> Prim PrimText -- DAML has only datetime
+        "time"          -> Prim PrimText -- Daml has only datetime
         "dateTime"      -> Prim PrimTime
         "zonedDateTime" -> Prim PrimTime
         "calculation"   -> Prim PrimText
@@ -221,7 +221,7 @@ convCardinality (Cardinality lower upper) =
 convAnnotation :: Maybe Annotation -> Model.Comment
 convAnnotation = maybe Model.noComment (Model.Comment . Just . unAnnotation)
 
--- fix clashes with DAML types
+-- fix clashes with Daml types
 convClassName :: Identifier -> String
 convClassName idn =
     case unIdentifier idn of
@@ -230,7 +230,7 @@ convClassName idn =
         "Party"         -> "PartyData"
         ty              -> ty
 
--- fix clash with DAML reserved words
+-- fix clash with Daml reserved words
 convFieldName :: Identifier -> String
 convFieldName (Identifier idn) =
     case idn of
