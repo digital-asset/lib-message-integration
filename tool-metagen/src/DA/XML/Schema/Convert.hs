@@ -660,10 +660,11 @@ lookupFrom f k = do
 mkFieldType :: QName -> Type XmlMeta
 mkFieldType QName{..} =
     case qName of
-        -- The xsd:any type, which we do not support (requires ExistentialTypes in DAML).
+        -- The xsd:any type, which we do not support (requires ExistentialTypes in Daml).
         "any"                | isXsd -> Prim PrimText
 
         "decimal"            | isXsd -> Prim PrimDecimal
+        "double"             | isXsd -> Prim PrimDecimal
         "integer"            | isXsd -> Prim PrimInteger
         "int"                | isXsd -> Prim PrimInteger
         "nonNegativeInteger" | isXsd -> Prim PrimInteger
@@ -690,6 +691,8 @@ mkFieldType QName{..} =
         "gMonthDay"          | isXsd -> Prim PrimText
         "gDay"               | isXsd -> Prim PrimText
         "gMonth"             | isXsd -> Prim PrimText
+
+        "NMTOKEN"            | isXsd -> Prim PrimText
 
         name                         -> Nominal $ convTypeName name
   where
