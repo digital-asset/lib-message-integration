@@ -5,7 +5,7 @@
 {-# OPTIONS_GHC -Wno-name-shadowing #-}
 {-# LANGUAGE OverloadedStrings #-}
 
--- | Generate DAML types and metadata for XML XSD schema.
+-- | Generate Daml types and metadata for XML XSD schema.
 module Main where
 
 import           Control.Applicative        ((<$>))
@@ -76,8 +76,8 @@ optParser = Options
     <*> strOption
         ( long "daml-package"
         <> short 'p'
-        <> metavar "DAML-PACKAGE"
-        <> help "package name for DAML output target")
+        <> metavar "Daml-PACKAGE"
+        <> help "package name for Daml output target")
     <*> strOption
         ( long "json-package"
         <> short 'j'
@@ -112,7 +112,7 @@ xsdOptionsP = UseXSD
         ( long "module-name"
         <> short 'n'
         <> metavar "MODULE-NAME"
-        <> help "Module name for DAML and Json targets")
+        <> help "Module name for Daml and Json targets")
 
 cdmOptionsP :: Parser Command
 cdmOptionsP = UseCDM <$> strOption
@@ -126,7 +126,7 @@ argParser :: ParserInfo Options
 argParser = info (optParser <**> helper)
     (   fullDesc
     <>  header (unwords ["metagen", showVersion version])
-    <>  progDesc "Convert schemas to DAML types and encoder/decoder metadata" )
+    <>  progDesc "Convert schemas to Daml types and encoder/decoder metadata" )
 
 main :: IO ()
 main = do
@@ -212,7 +212,7 @@ runRosetta Options{..} baseDir = do
                 modu { module_imports = imports }
 
 
-    -- For DAML, split into two files (as we have always done so far)
+    -- For Daml, split into two files (as we have always done so far)
     writeDaml' "Enums" [] env schemaEnums
     writeDaml' "Classes" [Unqualified $ optDamlPackage++".Enums"] env schemaClasses
 
