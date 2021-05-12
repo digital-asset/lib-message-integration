@@ -1,7 +1,10 @@
-sdk-version: 1.5.0
+sdk-version: 1.12.0
 name: fpml-clearing-demo
-source: daml
+version: 0.0.1
 init-script: Main:init
+source: daml/Main.daml
+json-api-options:
+  - --max-inbound-message-size=11534336
 parties:
   - OPERATOR
   - SEFCORP
@@ -13,7 +16,6 @@ parties:
   - DEALER-D01
   - DEALER-D02
   - REUTERS
-version: 0.0.1
 dependencies:
   - daml-prim
   - daml-stdlib

@@ -109,13 +109,12 @@ annotation = do
                         (elContent annot))
        <|>
        -- If there is no documentation element, just include the text of the inner XML
-       (pure (XSD.Annotation $ XML.ppElement annot))
+       pure (XSD.Annotation $ XML.ppElement annot)
 
 modelGroup :: XMLParser XSD.ModelGroup
 modelGroup = do
     e <- xsdElement "group"
-    XSD.ModelGroup
-        <$> pure (Just $ XSD.Annotation "") -- recurseWith (xsdTag "annotation") (optionMaybe annotation) (elContent e)
+    pure (XSD.ModelGroup (Just $ XSD.Annotation "")) -- recurseWith (xsdTag "annotation") (optionMaybe annotation) (elContent e)
         <*> nameOrRef e
         <*> occurs e
         <*> recurseElemsWith (not . xsdTag "annotation") (optionMaybe elements) (elContent e)
@@ -423,7 +422,7 @@ content = token show getPos
 
 -- | The next content element, checking that the supplied predicate matches.
 elementWith :: (Content -> Bool) -> String -> XMLParser Element
-elementWith match msg = content (\cont -> case cont of
+elementWith match msg = content (\case
     c@(Elem el) | match c -> return el
     _ -> Nothing)
     <?> msg
@@ -434,7 +433,7 @@ anyElement = elementWith (const True) "any element"
 
 -- | Grabs all plain text from the next token.
 text :: XMLParser String
-text = content (\cont -> case cont of
+text = content (\case
     Elem el              -> Just $ XML.strContent el
     Text (CData _ str _) -> Just str
     _ -> Nothing)

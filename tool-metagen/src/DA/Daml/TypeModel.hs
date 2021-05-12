@@ -14,6 +14,8 @@ import qualified Data.List as List
 import Data.Map (Map)
 import qualified Data.Map as Map
 import Data.Maybe
+import Data.Set (Set)
+import qualified Data.Set as Set
 
 type Name = String
 
@@ -46,6 +48,13 @@ data Decl a
     | InlineComment String
     deriving (Eq, Show)
 
+usedPrimitives :: Set PrimType -> Decl a -> Set PrimType
+usedPrimitives s EnumType {}               = s
+usedPrimitives s (RecordType _ fs _)       = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitives s (VariantType _ fs _)      = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitives s (NewType _ t _)           = usedPrimitivesInType s t
+usedPrimitives s (InlineComment _)         = s
+
 getTypeName :: Decl a -> Maybe Name
 getTypeName (EnumType n _ _)    = Just n
 getTypeName (RecordType n _ _)  = Just n
@@ -62,6 +71,9 @@ data Field a = Field
     }
     deriving (Eq, Ord, Show)
 
+addUsedPrimitiesInFieldToSet :: Set PrimType -> Field a -> Set PrimType
+addUsedPrimitiesInFieldToSet s Field {field_type} = usedPrimitivesInType s field_type
+
 -- | Primitive or structural type (anonymous)
 -- NOTE: Structural types are currently eliminated, but this decision may
 -- be revisted in some cases, e.g. simple pairs.
@@ -75,6 +87,14 @@ data Type a
     -- XSD and CDM Rosetta.
     -- Extend  [Field a] (Type a)
     deriving (Eq, Ord, Show)
+
+usedPrimitivesInType :: Set PrimType -> Type a -> Set PrimType
+usedPrimitivesInType s (Prim t)        = Set.insert t s
+usedPrimitivesInType s (Nominal _)     = s
+usedPrimitivesInType s (Enum _)        = s
+usedPrimitivesInType s (Product fs)    = List.foldl' addUsedPrimitiesInFieldToSet s fs
+usedPrimitivesInType s (Sum fs)        = List.foldl' addUsedPrimitiesInFieldToSet s fs
+
 
 data PrimType
     = PrimText
@@ -234,7 +254,7 @@ flattenNestedSums p = map decl
 
     field f = f { field_type = types (field_type f) }
 
-    types (Sum fs) = Sum $ concatMap extract $ map field fs
+    types (Sum fs) = Sum $ concatMap (extract . field) fs
     types (Product fs)  = Product $ map field fs
     types n = n
 
@@ -262,7 +282,7 @@ gatherReferencedDecls allDecls topName =
                   (VariantType   _ fs _) -> fields fs
                   --(ExtendType    _ _  fs1 fs2 _) -> fields fs1 <> fields fs2
                   _ -> []
-              deps = mapMaybe (\n -> Map.lookup n allDecls) names
+              deps = mapMaybe (`Map.lookup` allDecls) names
           in List.foldl' go (Map.insert name d m) deps
         | otherwise = m
 
