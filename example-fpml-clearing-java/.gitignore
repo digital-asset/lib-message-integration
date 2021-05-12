@@ -1,1 +1,5 @@
 .daml/
+
+# SBT files
+.bsp
+project
