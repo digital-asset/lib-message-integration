@@ -6,6 +6,8 @@ version := "0.1"
 
 scalaVersion := "2.12.8"
 
+resolvers += Resolver.mavenLocal
+
 libraryDependencies += "io.spray" %%  "spray-json" % "1.3.4"
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
 libraryDependencies += "com.daml" % "bindings-java" % "1.12.0"
