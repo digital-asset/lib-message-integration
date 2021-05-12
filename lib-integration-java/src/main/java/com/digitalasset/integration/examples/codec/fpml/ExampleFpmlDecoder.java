@@ -8,7 +8,20 @@
  */
 package com.digitalasset.integration.examples.codec.fpml;
 
-import com.daml.ledger.javaapi.data.*;
+import com.daml.ledger.javaapi.data.Bool;
+import com.daml.ledger.javaapi.data.Command;
+import com.daml.ledger.javaapi.data.DamlList;
+import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.Int64;
+import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.Text;
+import com.daml.ledger.javaapi.data.Timestamp;
+import com.daml.ledger.javaapi.data.Unit;
+import com.daml.ledger.javaapi.data.Value;
+import com.daml.ledger.javaapi.data.Variant;
+
 import com.digitalasset.integration.api.codec.exceptions.CodecException;
 import com.digitalasset.integration.api.codec.Decoder;
 import com.digitalasset.integration.api.codec.exceptions.SchemaValidationException;

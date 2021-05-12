@@ -21,19 +21,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.daml.ledger</groupId>
+            <groupId>com.daml</groupId>
             <artifactId>bindings-java</artifactId>
-            <version>100.12.1</version>
+            <version>1.12.0</version>
         </dependency>
         <dependency>
-            <groupId>com.daml.ledger</groupId>
+            <groupId>com.daml</groupId>
             <artifactId>bindings-rxjava</artifactId>
-            <version>100.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.digitalasset</groupId>
-            <artifactId>daml-lf-archive</artifactId>
-            <version>100.12.1</version>
+            <version>1.12.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -110,7 +105,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>2.22.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
