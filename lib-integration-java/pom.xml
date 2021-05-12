@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
     <version>0.1-SNAPSHOT</version>
     <name>finance-integration</name>
-    <url>http://www.daml.com</url>
+    <url>https://www.daml.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -130,6 +130,10 @@
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.0.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.2.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
