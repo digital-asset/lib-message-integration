@@ -19,8 +19,8 @@ import io.reactivex.Flowable
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import com.digitalasset.ledger.api.v1.testing.TimeServiceGrpc
-import com.digitalasset.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
+import com.daml.ledger.api.v1.testing.TimeServiceGrpc
+import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
 
 case class Config
   (
@@ -79,15 +79,11 @@ class LedgerClient(config: Config) {
 
   // Send a list of commands
   def sendCommands(wfId: String, party: String, commands: List[Command]): Unit = {
-    val currentTime = getTime()
-    val maxRecordTime = currentTime.plusSeconds(30)
     client.getCommandClient.submitAndWait(
       wfId,
       config.appId,
       UUID.randomUUID().toString,
       party,
-      currentTime,
-      maxRecordTime,
       commands.asJava
     )
   }
@@ -143,8 +139,9 @@ class LedgerClient(config: Config) {
       config.appId,
       cId,
       party,
-      time,
-      maxRecordTime,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       commands.asJava
     )
   }
