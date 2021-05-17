@@ -1,6 +1,4 @@
-import scala.util.Try
-
-name := "app"
+name := "example-accord-app"
 
 version := "0.1"
 
