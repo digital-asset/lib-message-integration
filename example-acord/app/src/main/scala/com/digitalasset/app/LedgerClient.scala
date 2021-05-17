@@ -19,8 +19,8 @@ import io.reactivex.Flowable
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import com.digitalasset.ledger.api.v1.testing.TimeServiceGrpc
-import com.digitalasset.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
+import com.daml.ledger.api.v1.testing.TimeServiceGrpc
+import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
 
 case class Config
   (
@@ -39,7 +39,7 @@ trait Bot[T] {
 }
 
 class LedgerClient(config: Config) {
-  private val client = DamlLedgerClient.forHostWithLedgerIdDiscovery(config.hostIp, config.hostPort, Optional.empty())
+  private val client = DamlLedgerClient.newBuilder(config.hostIp, config.hostPort).build()
   client.connect()
   private val templateName2id = loadTemplates()
 
@@ -86,8 +86,6 @@ class LedgerClient(config: Config) {
       config.appId,
       UUID.randomUUID().toString,
       party,
-      currentTime,
-      maxRecordTime,
       commands.asJava
     )
   }
@@ -143,8 +141,9 @@ class LedgerClient(config: Config) {
       config.appId,
       cId,
       party,
-      time,
-      maxRecordTime,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       commands.asJava
     )
   }
