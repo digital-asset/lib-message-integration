@@ -97,7 +97,7 @@ class LedgerClient(config: Config) {
       val clock = Clock.fixed(ledgerTime, ZoneOffset.UTC)
       try {
         bot.run(getTemplateId, ledgerView, clock) match {
-          case l if l.nonEmpty => Flowable.just(createCommandsAndPendingSet(clock.instant, party, l))
+          case l if l.nonEmpty => Flowable.just(createCommandsAndPendingSet(party, l))
           case _ => Flowable.just(CommandsAndPendingSet.empty)
         }
       } catch {
@@ -118,9 +118,9 @@ class LedgerClient(config: Config) {
     Bot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
   }
 
-  private def createCommandsAndPendingSet(time: Instant, party: String, commands: List[Command]): CommandsAndPendingSet = {
+  private def createCommandsAndPendingSet(party: String, commands: List[Command]): CommandsAndPendingSet = {
     val cId = UUID.randomUUID().toString + ":" + commands.map(_.asExerciseCommand()).filter(_.isPresent).map(c => c.get.getContractId).mkString(";")
-    val cmds = createSubmitCommandsRequest(cId, time, party, commands)
+    val cmds = createSubmitCommandsRequest(cId, party, commands)
 
     val pendingSet = commands
       .map(_.asExerciseCommand())
@@ -132,7 +132,7 @@ class LedgerClient(config: Config) {
     new CommandsAndPendingSet(cmds, HashTreePMap.from(pendingSet.asJava))
   }
 
-  private def createSubmitCommandsRequest(cId: String, time: Instant, party: String, commands: List[Command]): SubmitCommandsRequest = {
+  private def createSubmitCommandsRequest(cId: String, party: String, commands: List[Command]): SubmitCommandsRequest = {
     new SubmitCommandsRequest(
       UUID.randomUUID().toString,
       config.appId,
