@@ -7,7 +7,7 @@ import java.net.URL
 import java.time.Clock
 
 import com.daml.ledger.javaapi.data.Record.Field
-import com.daml.ledger.javaapi.data._
+import com.daml.ledger.javaapi.data.{Unit => _, _}
 import com.daml.ledger.rxjava.components.LedgerViewFlowable
 import com.daml.ledger.rxjava.components.helpers.CreatedContract
 import com.digitalasset.app.Bot
@@ -22,7 +22,7 @@ class EventProcessor(clearingHouseTid: Identifier,
                      clients: Map[String, ContractId],
                      members: Map[String, ContractId]) extends Bot[Record] {
 
-  val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
+  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
 
   def mkClasspathURL(path: String) : URL =
     new URL(null, path, new Handler())
@@ -53,14 +53,13 @@ class EventProcessor(clearingHouseTid: Identifier,
     cmds
   }
 
-  def showEvents(ledgerView: LedgerViewFlowable.LedgerView[Record], tid: Identifier, rootElemName: String, payloadField: String ) = {
+  private def showEvents(ledgerView: LedgerViewFlowable.LedgerView[Record], tid: Identifier, rootElemName: String, payloadField: String ): Unit = {
     val encoder = new FpMLEncoder(rootElemName, metadata, null)
     val events = ledgerView.getContracts(tid).asScala.toList
     events.flatMap {
-      case (_, r) => {
+      case (_, r) =>
         logger.debug(encoder.encodePretty(r.get(payloadField)))
         None
-      }
     }
     ()
   }

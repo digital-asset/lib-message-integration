@@ -49,10 +49,10 @@ class LedgerClient(config: Config) {
   private val ledgerId = client.getLedgerId
 
   // Get template id by name
-  def getTemplateId(name: String) = templateName2id(name)
+  def getTemplateId(name: String): Identifier = templateName2id(name)
 
   // Get current ledger time
-  def getTime(): Instant = {
+  def getTime: Instant = {
     val getRequest = GetTimeRequest.newBuilder()
       .setLedgerId(ledgerId)
       .build()
@@ -62,7 +62,7 @@ class LedgerClient(config: Config) {
 
   // Set current ledger time
   def setTime(newTime: Instant): Unit = {
-    val currentTime = getTime()
+    val currentTime = getTime
     if (currentTime.isBefore(newTime)) {
       val currentTimestamp = Timestamp.newBuilder().setSeconds(currentTime.getEpochSecond).setNanos(currentTime.getNano).build
       val newTimestamp = Timestamp.newBuilder().setSeconds(newTime.getEpochSecond).setNanos(newTime.getNano).build
@@ -79,8 +79,6 @@ class LedgerClient(config: Config) {
 
   // Send a list of commands
   def sendCommands(wfId: String, party: String, commands: List[Command]): Unit = {
-    val currentTime = getTime()
-    val maxRecordTime = currentTime.plusSeconds(30)
     client.getCommandClient.submitAndWait(
       wfId,
       config.appId,
@@ -94,7 +92,7 @@ class LedgerClient(config: Config) {
   def wireBot[T](party: String, bot: Bot[T]): Unit = {
 
     def runWithErrorHandling(ledgerView: LedgerViewFlowable.LedgerView[T]): Flowable[CommandsAndPendingSet] = {
-      val ledgerTime = getTime()
+      val ledgerTime = getTime
 
       val clock = Clock.fixed(ledgerTime, ZoneOffset.UTC)
       try {
@@ -135,7 +133,6 @@ class LedgerClient(config: Config) {
   }
 
   private def createSubmitCommandsRequest(cId: String, time: Instant, party: String, commands: List[Command]): SubmitCommandsRequest = {
-    val maxRecordTime = time.plusSeconds(30)
     new SubmitCommandsRequest(
       UUID.randomUUID().toString,
       config.appId,
@@ -154,7 +151,7 @@ class LedgerClient(config: Config) {
 
     // find template identifier, assume only two packages in sandbox, the first of which is the stdlib
     // FIXME I cannot inspect the metadata of a package without downloading it, which blows grpc limits
-    val pkgId = client.getPackageClient().listPackages().blockingFirst()
+    val pkgId = client.getPackageClient.listPackages().blockingFirst()
         Map( "RequestClearingEvent" -> new Identifier(pkgId, "Role.ClearingMember", "RequestClearingEvent"),
              "ClearingConfirmedEvent" -> new Identifier(pkgId, "Role.ClearingMember", "ClearingConfirmedEvent"),
              "AcknowledgementEvent" -> new Identifier(pkgId, "Role.ClearingMember", "AcknowledgementEvent"),
@@ -165,10 +162,10 @@ class LedgerClient(config: Config) {
   }
 
   def getActiveContracts(templateId: Identifier, party: String): List[CreatedEvent] =
-    client.getActiveContractSetClient()
+    client.getActiveContractSetClient
                .getActiveContracts(filterFor(templateId, party), true)
                .blockingIterable().asScala
-               .flatMap(r => r.getCreatedEvents().asScala)
+               .flatMap(r => r.getCreatedEvents.asScala)
                .toList
                .sortBy(_.getContractId)
 

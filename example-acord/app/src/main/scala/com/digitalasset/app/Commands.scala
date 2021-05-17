@@ -15,16 +15,15 @@ import com.typesafe.config.ConfigFactory
 import org.slf4j.LoggerFactory
 
 object Commands {
-  val config = ConfigFactory.load()
-  val client = initClient()
+  private val config = ConfigFactory.load()
+  private val client = initClient()
 
   val operatorName  = "OPERATOR"
   val houseName     = "CLEARCO"
 
   var houseContract: Option[House] = None
-  val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
-  val schema = mkClasspathURL("classpath:fpml/confirmation/fpml-main-5-10.xsd")
-  val requestClearing = mkClasspathURL("classpath:fpml/confirmation/business-processes/clearing/msg-ex07-clearingRequested-from-sef.xml")
+  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
+  private val schema = mkClasspathURL("classpath:fpml/confirmation/fpml-main-5-10.xsd")
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
 
@@ -57,8 +56,6 @@ object Commands {
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
     client.sendCommands("RequestClearingFlow", operatorName, List(cmd))
   }
-
-  def getTime() = {client.getTime()}
 
   def setTime(timeString: String): Unit = {
     val time = Instant.parse(timeString)
