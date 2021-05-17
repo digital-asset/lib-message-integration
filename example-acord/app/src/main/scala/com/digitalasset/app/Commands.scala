@@ -3,16 +3,16 @@
 
 package com.digitalasset.app
 
-import java.net.URL
-import java.time.Instant
-import org.slf4j.Logger
 import com.daml.ledger.javaapi.data.Identifier
 import com.digitalasset.app.decoders.RequestClearingDecoder
 import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
 import com.digitalasset.integration.protocols.classpath.Handler
 import com.google.common.io.ByteStreams
 import com.typesafe.config.ConfigFactory
-import org.slf4j.LoggerFactory
+import org.slf4j.{Logger, LoggerFactory}
+
+import java.net.URL
+import java.time.Instant
 
 object Commands {
   private val config = ConfigFactory.load()
@@ -23,7 +23,6 @@ object Commands {
 
   var houseContract: Option[House] = None
   private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
-  private val schema = mkClasspathURL("classpath:fpml/confirmation/fpml-main-5-10.xsd")
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
 
