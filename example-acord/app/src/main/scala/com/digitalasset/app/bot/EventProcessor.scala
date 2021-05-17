@@ -3,9 +3,6 @@
 
 package com.digitalasset.app.bot
 
-import java.net.URL
-import java.time.Clock
-
 import com.daml.ledger.javaapi.data.Record.Field
 import com.daml.ledger.javaapi.data.{Unit => _, _}
 import com.daml.ledger.rxjava.components.LedgerViewFlowable
@@ -16,6 +13,8 @@ import com.digitalasset.app.utils.Record._
 import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
 import com.digitalasset.integration.protocols.classpath.Handler
 
+import java.net.URL
+import java.time.Clock
 import scala.collection.JavaConverters._
 
 class EventProcessor(clearingHouseTid: Identifier,
@@ -54,7 +53,7 @@ class EventProcessor(clearingHouseTid: Identifier,
   }
 
   private def showEvents(ledgerView: LedgerViewFlowable.LedgerView[Record], tid: Identifier, rootElemName: String, payloadField: String ): Unit = {
-    val encoder = new FpMLEncoder(rootElemName, metadata, null)
+    val encoder = new FpMLEncoder(rootElemName, metadata)
     val events = ledgerView.getContracts(tid).asScala.toList
     events.flatMap {
       case (_, r) =>

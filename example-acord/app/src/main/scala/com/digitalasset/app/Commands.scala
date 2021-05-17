@@ -50,7 +50,7 @@ object Commands {
   // Flows
   def send(example: URL): Unit = {
 
-    val decoder = new RequestClearingDecoder(houseContract.get.tid, houseContract.get.cid, metadata, schema)
+    val decoder = new RequestClearingDecoder(houseContract.get.tid, houseContract.get.cid, metadata)
     // val encoder = new FpMLEncoder("clearingAcknowledgement", metadata, schema)
 
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))

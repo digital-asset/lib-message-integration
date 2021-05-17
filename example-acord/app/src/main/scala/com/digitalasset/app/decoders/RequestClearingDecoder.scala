@@ -3,8 +3,6 @@
 
 package com.digitalasset.app.decoders
 
-import java.net.URL
-
 import com.daml.ledger.javaapi.data.Record.Field
 import com.daml.ledger.javaapi.data.{Command, ExerciseCommand, Identifier, Record}
 import com.digitalasset.integration.api.codec.Decoder
@@ -16,9 +14,7 @@ import scala.collection.JavaConverters._
 
 class RequestClearingDecoder(templateId: Identifier,
                              contractId: String,
-                             metadata: XsdMetadata,
-                             schema: URL
-                            ) extends Decoder {
+                             metadata: XsdMetadata) extends Decoder {
 
   val rootName = "requestClearing"
   val choiceName = "SubmitRequestClearing"
