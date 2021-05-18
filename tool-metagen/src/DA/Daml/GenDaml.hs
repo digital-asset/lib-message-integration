@@ -20,7 +20,7 @@ ppModule Module{..} =
         $$ text "module" <+> text module_name
         $$ nest 2 (text "( module" <+> text module_name <+> text ") where")
         $$ ppImports module_imports
-        $$ text "import Prelude ( Eq, Ord, Show, Optional, " <> text primitiveImports <> text " )"   -- Detecting Optional is a bit more onerous
+        $$ text "import Prelude ( Eq, Ord(..), Show, Optional, " <> text primitiveImports <> text " )"   -- Detecting Optional is a bit more onerous
         $$ text ""
         $$ ppDecls module_decls
 
@@ -49,8 +49,14 @@ ppDecl (EnumType name constrs comment) =
 ppDecl (RecordType name fields comment) =
     ppComment Before comment
     $$ text "data" <+> text name <+> text "=" <+> text name <+> text "with"
-        $$ nest 4 (ppRecordFields fields
-                  $$ nest 2 (text "deriving (Eq, Ord, Show)"))
+        $$ nest 4 (ppRecordFields fields)
+    $$ text ""
+    $$ text "instance Eq" <+> text name <+> text "where" <+> text "(==) = GHC.Types.primitive @\"BEEqual\""
+    $$ text "instance Ord" <+> text name <+> text "where" <+> text "(<=) = GHC.Types.primitive @\"BELessEq\""
+    $$ text "instance Show" <+> text name <+> text "where"
+      $$ nest 2 (text "show" <+> text name <+> text ("{} = \"" ++ name ++ "\""))
+
+--                  $$ nest 2 (text "deriving (Eq, Ord, Show)"))
 
 ppDecl (VariantType name fields comment)
     | not (null fields) =
