@@ -1,4 +1,4 @@
-name := "app"
+name := "example-fpml-clearing-app"
 
 version := "0.1"
 

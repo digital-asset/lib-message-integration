@@ -3,30 +3,26 @@
 
 package com.digitalasset.app
 
+import com.daml.ledger.javaapi.data.Identifier
+import com.digitalasset.app.decoders.RequestClearingDecoder
+import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
+import com.digitalasset.integration.protocols.classpath.Handler
+import com.google.common.io.ByteStreams
+import com.typesafe.config.ConfigFactory
+import org.slf4j.{Logger, LoggerFactory}
+
 import java.net.URL
 import java.time.Instant
 
-import org.slf4j.Logger
-import com.daml.ledger.javaapi.data.Identifier
-import com.digitalasset.app.decoders.RequestClearingDecoder
-import com.digitalasset.app.encoders.FpMLEncoder
-import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
-import com.digitalasset.integration.protocols.classpath.Handler
-import com.typesafe.config.ConfigFactory
-import io.grpc.internal.IoUtils
-import org.slf4j.LoggerFactory
-
 object Commands {
-  val config = ConfigFactory.load()
-  val client = initClient()
+  private val config = ConfigFactory.load()
+  private val client = initClient()
 
   val operatorName  = "OPERATOR"
   val houseName     = "CLEARCO"
 
   var houseContract: Option[House] = None
-  val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
-  val schema = mkClasspathURL("classpath:fpml/confirmation/fpml-main-5-10.xsd")
-  val requestClearing = mkClasspathURL("classpath:fpml/confirmation/business-processes/clearing/msg-ex07-clearingRequested-from-sef.xml")
+  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
 
@@ -53,14 +49,12 @@ object Commands {
   // Flows
   def send(example: URL): Unit = {
 
-    val decoder = new RequestClearingDecoder(houseContract.get.tid, houseContract.get.cid, metadata, schema)
+    val decoder = new RequestClearingDecoder(houseContract.get.tid, houseContract.get.cid, metadata)
     // val encoder = new FpMLEncoder("clearingAcknowledgement", metadata, schema)
 
-    val cmd = decoder.decode("example", IoUtils.toByteArray(example.openStream()))
+    val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
     client.sendCommands("RequestClearingFlow", operatorName, List(cmd))
   }
-
-  def getTime() = {client.getTime()}
 
   def setTime(timeString: String): Unit = {
     val time = Instant.parse(timeString)
@@ -72,6 +66,6 @@ object Commands {
     new URL(null, path, new Handler())
 
   def fetchUrl(url: URL): String =
-    new String(IoUtils.toByteArray(url.openStream))
+    new String(ByteStreams.toByteArray(url.openStream))
 
 }

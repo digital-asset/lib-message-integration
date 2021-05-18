@@ -25,7 +25,7 @@ object Record {
       r
         .getFields.listIterator.asScala.toList.find(p => p.getLabel.get == label).get
         .getValue.asList.get
-        .getValues.stream.map[T](x => x.asInstanceOf[T]).collect(Collectors.toList())
+        .stream().map[T](x => x.asInstanceOf[T]).collect(Collectors.toList[T])
         .asScala.toList
 
     def getOptional[T](label: String): Option[T] = {

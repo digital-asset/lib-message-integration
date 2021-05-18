@@ -4,14 +4,11 @@
 package com.digitalasset.app
 
 import com.daml.ledger.javaapi.data.{ContractId, Party}
+import com.digitalasset.app.utils.Record._
 import com.typesafe.config.ConfigFactory
 
 import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.ILoop
-import com.digitalasset.app.utils.Record._
-import org.slf4j.LoggerFactory
-
-import scala.collection.JavaConverters._
 
 object REPL extends App {
   val settings = new Settings

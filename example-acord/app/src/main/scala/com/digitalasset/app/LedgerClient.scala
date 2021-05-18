@@ -19,8 +19,8 @@ import io.reactivex.Flowable
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import com.digitalasset.ledger.api.v1.testing.TimeServiceGrpc
-import com.digitalasset.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
+import com.daml.ledger.api.v1.testing.TimeServiceGrpc
+import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
 
 case class Config
   (
@@ -39,7 +39,7 @@ trait Bot[T] {
 }
 
 class LedgerClient(config: Config) {
-  private val client = DamlLedgerClient.forHostWithLedgerIdDiscovery(config.hostIp, config.hostPort, Optional.empty())
+  private val client = DamlLedgerClient.newBuilder(config.hostIp, config.hostPort).build()
   client.connect()
   private val templateName2id = loadTemplates()
 
@@ -49,10 +49,10 @@ class LedgerClient(config: Config) {
   private val ledgerId = client.getLedgerId
 
   // Get template id by name
-  def getTemplateId(name: String) = templateName2id(name)
+  def getTemplateId(name: String): Identifier = templateName2id(name)
 
   // Get current ledger time
-  def getTime(): Instant = {
+  def getTime: Instant = {
     val getRequest = GetTimeRequest.newBuilder()
       .setLedgerId(ledgerId)
       .build()
@@ -62,7 +62,7 @@ class LedgerClient(config: Config) {
 
   // Set current ledger time
   def setTime(newTime: Instant): Unit = {
-    val currentTime = getTime()
+    val currentTime = getTime
     if (currentTime.isBefore(newTime)) {
       val currentTimestamp = Timestamp.newBuilder().setSeconds(currentTime.getEpochSecond).setNanos(currentTime.getNano).build
       val newTimestamp = Timestamp.newBuilder().setSeconds(newTime.getEpochSecond).setNanos(newTime.getNano).build
@@ -79,15 +79,11 @@ class LedgerClient(config: Config) {
 
   // Send a list of commands
   def sendCommands(wfId: String, party: String, commands: List[Command]): Unit = {
-    val currentTime = getTime()
-    val maxRecordTime = currentTime.plusSeconds(30)
     client.getCommandClient.submitAndWait(
       wfId,
       config.appId,
       UUID.randomUUID().toString,
       party,
-      currentTime,
-      maxRecordTime,
       commands.asJava
     )
   }
@@ -96,12 +92,12 @@ class LedgerClient(config: Config) {
   def wireBot[T](party: String, bot: Bot[T]): Unit = {
 
     def runWithErrorHandling(ledgerView: LedgerViewFlowable.LedgerView[T]): Flowable[CommandsAndPendingSet] = {
-      val ledgerTime = getTime()
+      val ledgerTime = getTime
 
       val clock = Clock.fixed(ledgerTime, ZoneOffset.UTC)
       try {
         bot.run(getTemplateId, ledgerView, clock) match {
-          case l if l.nonEmpty => Flowable.just(createCommandsAndPendingSet(clock.instant, party, l))
+          case l if l.nonEmpty => Flowable.just(createCommandsAndPendingSet(party, l))
           case _ => Flowable.just(CommandsAndPendingSet.empty)
         }
       } catch {
@@ -122,9 +118,9 @@ class LedgerClient(config: Config) {
     Bot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
   }
 
-  private def createCommandsAndPendingSet(time: Instant, party: String, commands: List[Command]): CommandsAndPendingSet = {
+  private def createCommandsAndPendingSet(party: String, commands: List[Command]): CommandsAndPendingSet = {
     val cId = UUID.randomUUID().toString + ":" + commands.map(_.asExerciseCommand()).filter(_.isPresent).map(c => c.get.getContractId).mkString(";")
-    val cmds = createSubmitCommandsRequest(cId, time, party, commands)
+    val cmds = createSubmitCommandsRequest(cId, party, commands)
 
     val pendingSet = commands
       .map(_.asExerciseCommand())
@@ -136,15 +132,15 @@ class LedgerClient(config: Config) {
     new CommandsAndPendingSet(cmds, HashTreePMap.from(pendingSet.asJava))
   }
 
-  private def createSubmitCommandsRequest(cId: String, time: Instant, party: String, commands: List[Command]): SubmitCommandsRequest = {
-    val maxRecordTime = time.plusSeconds(30)
+  private def createSubmitCommandsRequest(cId: String, party: String, commands: List[Command]): SubmitCommandsRequest = {
     new SubmitCommandsRequest(
       UUID.randomUUID().toString,
       config.appId,
       cId,
       party,
-      time,
-      maxRecordTime,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       commands.asJava
     )
   }
@@ -155,7 +151,7 @@ class LedgerClient(config: Config) {
 
     // find template identifier, assume only two packages in sandbox, the first of which is the stdlib
     // FIXME I cannot inspect the metadata of a package without downloading it, which blows grpc limits
-    val pkgId = client.getPackageClient().listPackages().blockingFirst()
+    val pkgId = client.getPackageClient.listPackages().blockingFirst()
         Map( "RequestClearingEvent" -> new Identifier(pkgId, "Role.ClearingMember", "RequestClearingEvent"),
              "ClearingConfirmedEvent" -> new Identifier(pkgId, "Role.ClearingMember", "ClearingConfirmedEvent"),
              "AcknowledgementEvent" -> new Identifier(pkgId, "Role.ClearingMember", "AcknowledgementEvent"),
@@ -166,10 +162,10 @@ class LedgerClient(config: Config) {
   }
 
   def getActiveContracts(templateId: Identifier, party: String): List[CreatedEvent] =
-    client.getActiveContractSetClient()
+    client.getActiveContractSetClient
                .getActiveContracts(filterFor(templateId, party), true)
                .blockingIterable().asScala
-               .flatMap(r => r.getCreatedEvents().asScala)
+               .flatMap(r => r.getCreatedEvents.asScala)
                .toList
                .sortBy(_.getContractId)
 
