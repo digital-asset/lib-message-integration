@@ -4,7 +4,7 @@
 
 module Role.Operator where
 
-import qualified TXLife.V1.TXLife as TXLife
+import qualified TXLife.TXLife as TXLife
 
 template OperatorRole
   with
