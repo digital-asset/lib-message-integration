@@ -3,13 +3,11 @@
 
 package com.digitalasset.app.utils
 
+import com.daml.ledger.javaapi.data.{Date, Unit, Variant, Record => RecordData}
+
 import java.time.LocalDate
 import java.util.Collections
 import java.util.stream.Collectors
-
-import com.daml.ledger.javaapi.data.{Record => RecordData}
-import com.daml.ledger.javaapi.data.{Variant, Date, Unit}
-
 import scala.collection.JavaConverters._
 
 object Record {
