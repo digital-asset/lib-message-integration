@@ -26,8 +26,8 @@ case class Config
   (
     appId: String,
     hostIp: String,
-    hostPort: Integer,
-    maxRecordOffset: Integer
+    hostPort: Int,
+    maxRecordOffset: Int
   )
 
 trait Bot[T] {
