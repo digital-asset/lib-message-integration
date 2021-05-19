@@ -10,7 +10,7 @@ import java.util.{Collections, Optional, UUID}
 import com.daml.ledger.javaapi.data.CreatedEvent
 import com.daml.ledger.javaapi.data.{Command, Filter, FiltersByParty, Identifier, InclusiveFilter, SubmitCommandsRequest, TransactionFilter}
 import com.daml.ledger.rxjava.DamlLedgerClient
-import com.daml.ledger.rxjava.components.{Bot, LedgerViewFlowable}
+import com.daml.ledger.rxjava.components.{Bot => RxBot, LedgerViewFlowable}
 import com.daml.ledger.rxjava.components.helpers.{CommandsAndPendingSet, CreatedContract}
 import com.google.protobuf.Timestamp
 import io.grpc.ManagedChannelBuilder
@@ -115,7 +115,7 @@ class LedgerClient(config: Config) {
 
     def transform(c: CreatedContract): T = bot.transform(getTemplateId, c)
 
-    Bot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
+    RxBot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
   }
 
   private def createCommandsAndPendingSet(party: String, commands: List[Command]): CommandsAndPendingSet = {
