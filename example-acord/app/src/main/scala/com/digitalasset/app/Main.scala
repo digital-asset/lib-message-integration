@@ -11,7 +11,9 @@ import scala.tools.nsc.Settings
 import scala.tools.nsc.interpreter.ILoop
 
 object REPL extends App {
-  val settings = new Settings
+  val settings = new Settings {
+    usejavacp.value = true
+  }
   settings.embeddedDefaults[Commands.type]
   new sys.SystemProperties += (
     "scala.repl.autoruncode" -> "repl.init",
