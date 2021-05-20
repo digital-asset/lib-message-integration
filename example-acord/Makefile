@@ -2,7 +2,7 @@
 
 LEDGER_HOST ?= "localhost"
 LEDGER_PORT ?= 6865
-ACORD_MODELS_DAR ?= ".daml/dist/acord-demo-0.0.1.dar"
+ACORD_MODELS_DAR ?= "models/.daml/dist/acord-demo-0.0.1.dar"
 INIT_SCRIPT_NAME ?= "Main:init"
 
 .PHONY: startSandbox initializeLedger
