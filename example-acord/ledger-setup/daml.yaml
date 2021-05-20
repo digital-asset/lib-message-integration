@@ -10,4 +10,4 @@ dependencies:
   - daml-prim
   - daml-stdlib
   - daml-script
-  - ../models/.daml/dist/acord-models-0.0.1.dar
+  - ../acord-models/.daml/dist/acord-models-0.0.1.dar
