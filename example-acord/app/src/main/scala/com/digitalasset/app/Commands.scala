@@ -10,6 +10,7 @@ import com.digitalasset.integration.protocols.classpath.Handler
 import com.google.common.io.ByteStreams
 import com.typesafe.config.ConfigFactory
 import org.slf4j.{Logger, LoggerFactory}
+import role.operator.OperatorRole
 
 import java.net.URL
 import java.time.Instant
@@ -18,7 +19,7 @@ object Commands {
   private val config = ConfigFactory.load()
   private val client = initClient()
 
-  val operatorName  = "OPERATOR"
+  val operator  = "Operator"
   val houseName     = "CLEARCO"
 
   var houseContract: Option[House] = None
@@ -40,10 +41,10 @@ object Commands {
   }
 
   def init() : Unit = {
-    val houseTid = client.getTemplateId("ClearingHouseRole")
-    val houseCid = client.getActiveContracts(houseTid, operatorName).head.getContractId
-    logger.info("Got ClearingHouse role contract: " + houseCid)
-    houseContract = Some(House(houseTid, houseCid))
+    val operatorRoleTemplateId = OperatorRole.TEMPLATE_ID
+    val operatorRole = client.getActiveContracts(operatorRoleTemplateId, operator).head.getContractId
+    logger.info("Got operator role contract: " + operatorRole)
+    houseContract = Some(House(operatorRoleTemplateId, operatorRole))
   }
 
   // Flows
@@ -53,7 +54,7 @@ object Commands {
     // val encoder = new FpMLEncoder("clearingAcknowledgement", metadata, schema)
 
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
-    client.sendCommands("RequestClearingFlow", operatorName, List(cmd))
+    client.sendCommands("RequestClearingFlow", operator, List(cmd))
   }
 
   def setTime(timeString: String): Unit = {
