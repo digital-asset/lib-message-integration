@@ -14,7 +14,16 @@ getPartyCmd who = do
 
 init : Script ()
 init = do
-  operator <- getPartyCmd "Operator"
-
-  opRole <- submit operator do    createCmd OperatorRole with operator
+  operator <- describe "Allocate operator party"
+    getPartyCmd "Operator"
+  describe "Create operator role" $
+    operator `submit` createCmd OperatorRole with operator
   pure ()
+
+
+describe : Action m => Text -> m a -> m a
+describe description task = do
+  debug $ "Started: " <> description
+  result <- task
+  debug $ "Finished: " <> description
+  pure result
