@@ -12,7 +12,8 @@ startSandbox:
 	daml sandbox \
 	--address=$(LEDGER_HOST) \
 	--port=$(LEDGER_PORT) \
-	$(ACORD_MODELS_DAR)
+	$(ACORD_MODELS_DAR) \
+	$(ACORD_LEDGER_SETUP_DAR)
 
 initializeLedger:
 	daml script \
