@@ -2,7 +2,8 @@
 
 LEDGER_HOST ?= "localhost"
 LEDGER_PORT ?= 6865
-ACORD_MODELS_DAR ?= "models/.daml/dist/acord-demo-0.0.1.dar"
+ACORD_MODELS_DAR ?= "models/.daml/dist/acord-models-0.0.1.dar"
+ACORD_LEDGER_SETUP_DAR ?= "ledger-setup/.daml/dist/acord-ledger-setup-0.0.1.dar"
 INIT_SCRIPT_NAME ?= "Main:init"
 
 .PHONY: startSandbox initializeLedger
@@ -17,5 +18,5 @@ initializeLedger:
 	daml script \
 	--ledger-host=$(LEDGER_HOST) \
 	--ledger-port=$(LEDGER_PORT) \
-	--dar=$(ACORD_MODELS_DAR) \
+	--dar=$(ACORD_LEDGER_SETUP_DAR) \
 	--script-name=$(INIT_SCRIPT_NAME)

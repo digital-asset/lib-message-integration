@@ -1,0 +1,13 @@
+sdk-version: 1.11.0
+
+name: acord-ledger-setup
+
+version: 0.0.1
+
+source: daml
+
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script
+  - ../models/.daml/dist/acord-models-0.0.1.dar
