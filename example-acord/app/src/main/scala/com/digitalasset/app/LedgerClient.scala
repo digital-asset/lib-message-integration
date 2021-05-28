@@ -18,7 +18,7 @@ import org.slf4j.{Logger, LoggerFactory}
 import java.time.{Clock, Instant, ZoneOffset}
 import java.util.Collections.singletonMap
 import java.util.{Collections, Optional, UUID}
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 
 case class Config
   (
@@ -125,9 +125,7 @@ class LedgerClient(config: Config) {
       .filter(_.isPresent)
       .map(c => (c.get.getTemplateId, c.get.getContractId))
       .groupBy(_._1)
-      .view
       .mapValues(x => HashTreePSet.from(x.map(_._2).asJava))
-      .toMap
 
     new CommandsAndPendingSet(cmds, HashTreePMap.from(pendingSet.asJava))
   }

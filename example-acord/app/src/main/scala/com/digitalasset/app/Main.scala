@@ -8,7 +8,7 @@ import com.digitalasset.app.utils.Record._
 import com.typesafe.config.ConfigFactory
 
 import scala.tools.nsc.Settings
-import scala.tools.nsc.interpreter.shell.{ILoop, ShellConfig}
+import scala.tools.nsc.interpreter.ILoop
 
 object REPL extends App {
   val settings = new Settings {
@@ -21,17 +21,16 @@ object REPL extends App {
     "java.protocol.handler.pkgs" -> "com.digitalasset.integration.protocols"
     )
   Commands.init()
-  val config = ShellConfig(settings)
-  new ILoop(config).run(settings)
+  new SampleILoop().process(settings)
 }
 
-//class SampleILoop extends ILoop {
-//  override def prompt = "DA $ "
-//
-//  override def printWelcome() {
-//    echo("\nWelcome to the FpML Clearing Demo Scala REPL\n")
-//  }
-//}
+class SampleILoop extends ILoop {
+  override def prompt = "DA $ "
+
+  override def printWelcome() {
+    echo("\nWelcome to the FpML Clearing Demo Scala REPL\n")
+  }
+}
 
 object Bots extends App {
   val config = ConfigFactory.load()

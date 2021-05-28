@@ -9,7 +9,7 @@ INIT_SCRIPT_NAME ?= "Main:init"
 .PHONY: generateSources startSandbox initializeLedger
 
 # TODO: This should make more sense in SBT.
-MANAGED_SOURCES = "app/target/scala-2.13/src_managed/main"
+MANAGED_SOURCES = "app/target/scala-2.12/src_managed/main"
 generateSources:
 	daml codegen java \
 	--output-directory $(MANAGED_SOURCES) \
