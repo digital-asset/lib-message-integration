@@ -2,7 +2,8 @@ name := "example-accord-app"
 
 version := "0.1"
 
-scalaVersion := "2.12.13"
+// See: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
+scalaVersion := "2.12.14"
 
 resolvers += Resolver.mavenLocal
 
