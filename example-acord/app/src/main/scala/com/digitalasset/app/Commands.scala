@@ -19,8 +19,8 @@ object Commands {
   private val config = ConfigFactory.load()
   private val client = initClient()
 
-  val operator  = "Operator"
-  val houseName     = "CLEARCO"
+  val operator = "Operator"
+  val houseName = "CLEARCO"
 
   var houseContract: Option[House] = None
   private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
@@ -40,7 +40,7 @@ object Commands {
     )
   }
 
-  def init() : Unit = {
+  def init(): Unit = {
     val operatorRoleTemplateId = OperatorRole.TEMPLATE_ID
     val operatorRole = client.getActiveContracts(operatorRoleTemplateId, operator).head.getContractId
     logger.info("Got operator role contract: " + operatorRole)
@@ -63,7 +63,7 @@ object Commands {
   }
 
   // TODO why does installing a protocol handler via sysprop not work?
-  def mkClasspathURL(path: String) : URL =
+  def mkClasspathURL(path: String): URL =
     new URL(null, path, new Handler())
 
   def fetchUrl(url: URL): String =

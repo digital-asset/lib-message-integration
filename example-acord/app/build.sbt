@@ -3,12 +3,14 @@ name := "example-accord-app"
 version := "0.1"
 
 // See: https://docs.scala-lang.org/overviews/jdk-compatibility/overview.html
-scalaVersion := "2.12.14"
+scalaVersion := "2.13.6"
 
 resolvers += Resolver.mavenLocal
 
-libraryDependencies += "io.spray" %% "spray-json" % "1.3.4"
+libraryDependencies += "io.spray" %% "spray-json" % "1.3.6"
 libraryDependencies += "org.scala-lang" % "scala-compiler" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+libraryDependencies += "org.scala-lang" % "scala-library" % scalaVersion.value
 libraryDependencies += "com.daml" % "bindings-java" % "1.12.0"
 libraryDependencies += "com.daml" % "bindings-rxjava" % "1.12.0"
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.3"
