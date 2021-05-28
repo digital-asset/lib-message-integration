@@ -6,7 +6,17 @@ ACORD_MODELS_DAR ?= "acord-models/.daml/dist/acord-models-0.0.1.dar"
 ACORD_LEDGER_SETUP_DAR ?= "ledger-setup/.daml/dist/acord-ledger-setup-0.0.1.dar"
 INIT_SCRIPT_NAME ?= "Main:init"
 
-.PHONY: startSandbox initializeLedger
+.PHONY: generateSources startSandbox initializeLedger
+
+# TODO: This should make more sense in SBT.
+MANAGED_SOURCES = "app/target/scala-2.12/src_managed/main"
+generateSources:
+	daml codegen java \
+	--output-directory $(MANAGED_SOURCES) \
+	acord-models/.daml/dist/acord-models-0.0.1.dar
+	daml codegen java \
+	--output-directory $(MANAGED_SOURCES) \
+	ledger-setup/.daml/dist/acord-ledger-setup-0.0.1.dar
 
 startSandbox:
 	daml sandbox \

@@ -16,6 +16,11 @@ libraryDependencies += "com.typesafe" % "config" % "1.2.1"
 libraryDependencies += "com.digitalasset" % "finance-integration" % "0.1-SNAPSHOT"
 libraryDependencies += "com.google.guava" % "guava" % "30.1.1-jre"
 
+Compile / sourceGenerators += Def.task {
+  val generatedSources = (Compile / sourceManaged).value.toGlob / ** / "*.java"
+  fileTreeView.value.list(generatedSources).map(_._1.toFile)
+}.taskValue
+
 // This seems to too slow and incremental compilation does not seem to work.
 //Compile / sourceGenerators += Def.task {
 //  import DamlPlugin._
