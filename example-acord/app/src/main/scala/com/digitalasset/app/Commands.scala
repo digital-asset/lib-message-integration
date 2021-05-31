@@ -6,7 +6,6 @@ package com.digitalasset.app
 import acord.AcordDecoder
 import com.digitalasset.app.decoders.RequestClearingDecoder
 import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
-import com.digitalasset.integration.protocols.classpath.Handler
 import com.google.common.io.ByteStreams
 import com.typesafe.config.ConfigFactory
 import org.slf4j.{Logger, LoggerFactory}
@@ -21,7 +20,7 @@ object Commands {
   private val operator = "Operator"
 
   private var operatorRole: Option[OperatorRole.Contract] = None
-  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:acord/metadata/TXLifeJ/TXLife.json"))
+  private val metadata = XsdMetadataReader.fromJSON(new URL("classpath:acord/metadata/TXLifeJ/TXLife.json"))
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
 
@@ -48,9 +47,5 @@ object Commands {
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
     client.sendCommands("Acord - SubmitTXLife", operator, List(cmd))
   }
-
-  // TODO why does installing a protocol handler via sysprop not work?
-  def mkClasspathURL(path: String): URL =
-    new URL(null, path, new Handler())
 
 }
