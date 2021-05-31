@@ -40,7 +40,7 @@ object Commands {
     val roleContractEvent = client.getActiveContracts(OperatorRole.TEMPLATE_ID, operator).head
     val contract = AcordDecoder.fromCreatedEvent(roleContractEvent)
     operatorRole = Some(contract.asInstanceOf[OperatorRole.Contract])
-    logger.info("Got operator role contract: " + operatorRole.get.id)
+    logger.info("Got operator role contract: {}", operatorRole.get.id)
   }
 
   def send(example: URL): Unit = {
