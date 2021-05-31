@@ -220,7 +220,9 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptor>src/main/assembly/api.xml</descriptor>
+                            <descriptors>
+                                <descriptor>src/main/assembly/api.xml</descriptor>
+                            </descriptors>
                         </configuration>
                     </execution>
                     <execution>
@@ -230,7 +232,9 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptor>src/main/assembly/distribution.xml</descriptor>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution.xml</descriptor>
+                            </descriptors>
                             <outputDirectory>${package.output.directory}/release-candidates</outputDirectory>
                             <finalName>finance-integration</finalName>
                             <appendAssemblyId>false</appendAssemblyId>
