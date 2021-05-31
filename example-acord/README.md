@@ -39,5 +39,5 @@ To run the demo app:
 
 ```shell
 cd app
-sbt "runMain PoCApp"
+sbt "runMain PoCApp [URL-to-XML]"
 ```
