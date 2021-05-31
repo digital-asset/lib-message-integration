@@ -3,7 +3,7 @@
 
 package com.digitalasset.app
 
-import com.daml.ledger.javaapi.data.Identifier
+import acord.AcordDecoder
 import com.digitalasset.app.decoders.RequestClearingDecoder
 import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
 import com.digitalasset.integration.protocols.classpath.Handler
@@ -22,12 +22,10 @@ object Commands {
   val operator  = "Operator"
   val houseName     = "CLEARCO"
 
-  var houseContract: Option[House] = None
+  var operatorRole: Option[OperatorRole.Contract] = None
   private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
-
-  case class House(tid: Identifier, cid: String)
 
   private def initClient(): LedgerClient = {
     new LedgerClient(
@@ -41,16 +39,15 @@ object Commands {
   }
 
   def init() : Unit = {
-    val operatorRoleTemplateId = OperatorRole.TEMPLATE_ID
-    val operatorRole = client.getActiveContracts(operatorRoleTemplateId, operator).head.getContractId
-    logger.info("Got operator role contract: " + operatorRole)
-    houseContract = Some(House(operatorRoleTemplateId, operatorRole))
+    val roleContractEvent = client.getActiveContracts(OperatorRole.TEMPLATE_ID, operator).head
+    val contract = AcordDecoder.fromCreatedEvent(roleContractEvent)
+    operatorRole = Some(contract.asInstanceOf[OperatorRole.Contract])
+    logger.info("Got operator role contract: " + operatorRole.get.id)
   }
 
   // Flows
   def send(example: URL): Unit = {
-
-    val decoder = new RequestClearingDecoder(houseContract.get.tid, houseContract.get.cid, metadata)
+    val decoder = new RequestClearingDecoder(OperatorRole.TEMPLATE_ID, operatorRole.get.id.contractId, metadata)
     // val encoder = new FpMLEncoder("clearingAcknowledgement", metadata, schema)
 
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))

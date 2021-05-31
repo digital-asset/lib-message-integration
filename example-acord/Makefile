@@ -16,6 +16,7 @@ generateSources:
 	acord-models/.daml/dist/acord-models-0.0.1.dar
 	daml codegen java \
 	--output-directory $(MANAGED_SOURCES) \
+	--decoderClass acord.AcordDecoder \
 	ledger-setup/.daml/dist/acord-ledger-setup-0.0.1.dar
 
 startSandbox:
