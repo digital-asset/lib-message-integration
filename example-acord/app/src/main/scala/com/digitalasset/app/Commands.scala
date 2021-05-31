@@ -23,7 +23,7 @@ object Commands {
   val houseName = "CLEARCO"
 
   var operatorRole: Option[OperatorRole.Contract] = None
-  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
+  private val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:acord/metadata/TXLifeJ/TXLife.json"))
 
   private val logger: Logger = LoggerFactory.getLogger("Commands")
 
@@ -51,7 +51,7 @@ object Commands {
     // val encoder = new FpMLEncoder("clearingAcknowledgement", metadata, schema)
 
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
-    client.sendCommands("RequestClearingFlow", operator, List(cmd))
+    client.sendCommands("Acord - SubmitTXLife", operator, List(cmd))
   }
 
   def setTime(timeString: String): Unit = {
