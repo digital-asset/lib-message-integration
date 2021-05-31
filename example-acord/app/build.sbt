@@ -21,6 +21,9 @@ Compile / sourceGenerators += Def.task {
   fileTreeView.value.list(generatedSources).map(_._1.toFile)
 }.taskValue
 
+Compile / run / fork := true
+Compile / run / javaOptions += "-Djava.protocol.handler.pkgs=com.digitalasset.integration.protocols"
+
 // This seems to too slow and incremental compilation does not seem to work.
 //Compile / sourceGenerators += Def.task {
 //  import DamlPlugin._
