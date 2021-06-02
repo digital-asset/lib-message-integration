@@ -29,12 +29,6 @@ Start a sandbox ledger:
 make startSandbox
 ```
 
-In a separate terminal initialize the ledger:
-
-```shell
-make initializeLedger
-```
-
 To run the demo app:
 
 ```shell
