@@ -16,12 +16,6 @@ To build the example:
 make
 ```
 
-Run the codegen:
-
-```shell
-make generateSources
-```
-
 Start a sandbox ledger:
 
 ```shell
