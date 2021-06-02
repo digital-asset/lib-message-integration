@@ -13,8 +13,7 @@
 To build the example:
 
 ```
-DAML_PROJECT=acord-models daml build
-DAML_PROJECT=ledger-setup daml build
+make
 ```
 
 Run the codegen:
