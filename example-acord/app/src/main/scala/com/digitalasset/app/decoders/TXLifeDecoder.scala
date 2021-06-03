@@ -12,12 +12,12 @@ import com.digitalasset.integration.internal.xml.QueryableXml
 
 import scala.collection.JavaConverters._
 
-class RequestClearingDecoder(templateId: Identifier,
-                             contractId: String,
-                             metadata: XsdMetadata) extends Decoder {
+class TXLifeDecoder(templateId: Identifier,
+                    contractId: String,
+                    metadata: XsdMetadata) extends Decoder {
 
-  val rootName = "requestClearing"
-  val choiceName = "SubmitRequestClearing"
+  val rootName = "TXLife"
+  val choiceName = "SubmitTXLife"
 
   override def decode(s: String, bytes: Array[Byte]): Command = {
         val xml = QueryableXml.parse(bytes)

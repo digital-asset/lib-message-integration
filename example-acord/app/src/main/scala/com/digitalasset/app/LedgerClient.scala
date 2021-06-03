@@ -3,31 +3,29 @@
 
 package com.digitalasset.app
 
+import com.daml.ledger.api.v1.testing.TimeServiceGrpc
+import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
+import com.daml.ledger.javaapi.data.{Command, CreatedEvent, Filter, FiltersByParty, Identifier, InclusiveFilter, SubmitCommandsRequest, TransactionFilter}
+import com.daml.ledger.rxjava.DamlLedgerClient
+import com.daml.ledger.rxjava.components.helpers.{CommandsAndPendingSet, CreatedContract}
+import com.daml.ledger.rxjava.components.{LedgerViewFlowable, Bot => RxBot}
+import com.google.protobuf.Timestamp
+import io.grpc.ManagedChannelBuilder
+import io.reactivex.Flowable
+import org.pcollections.{HashTreePMap, HashTreePSet}
+import org.slf4j.{Logger, LoggerFactory}
+
 import java.time.{Clock, Instant, ZoneOffset}
 import java.util.Collections.singletonMap
 import java.util.{Collections, Optional, UUID}
-
-import com.daml.ledger.javaapi.data.CreatedEvent
-import com.daml.ledger.javaapi.data.{Command, Filter, FiltersByParty, Identifier, InclusiveFilter, SubmitCommandsRequest, TransactionFilter}
-import com.daml.ledger.rxjava.DamlLedgerClient
-import com.daml.ledger.rxjava.components.{Bot, LedgerViewFlowable}
-import com.daml.ledger.rxjava.components.helpers.{CommandsAndPendingSet, CreatedContract}
-import com.google.protobuf.Timestamp
-import io.grpc.ManagedChannelBuilder
-import org.pcollections.{HashTreePMap, HashTreePSet}
-import io.reactivex.Flowable
-import org.slf4j.{Logger, LoggerFactory}
-
 import scala.collection.JavaConverters._
-import com.daml.ledger.api.v1.testing.TimeServiceGrpc
-import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
 
 case class Config
   (
     appId: String,
     hostIp: String,
-    hostPort: Integer,
-    maxRecordOffset: Integer
+    hostPort: Int,
+    maxRecordOffset: Int
   )
 
 trait Bot[T] {
@@ -115,7 +113,7 @@ class LedgerClient(config: Config) {
 
     def transform(c: CreatedContract): T = bot.transform(getTemplateId, c)
 
-    Bot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
+    RxBot.wire(config.appId, client, transactionFilter, runWithErrorHandling, transform)
   }
 
   private def createCommandsAndPendingSet(party: String, commands: List[Command]): CommandsAndPendingSet = {

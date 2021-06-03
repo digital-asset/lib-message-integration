@@ -1,0 +1,13 @@
+sdk-version: 1.11.0
+name: acord-models
+version: 0.0.1
+init-script: Main:init
+source: daml
+json-api-options:
+  - --max-inbound-message-size=11534336
+parties:
+  - Operator
+dependencies:
+  - daml-prim
+  - daml-stdlib
+  - daml-script

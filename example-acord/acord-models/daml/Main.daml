@@ -1,0 +1,29 @@
+-- Copyright (c) 2019-2021 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+-- SPDX-License-Identifier: Apache-2.0
+
+
+module Main where
+
+import Role.Operator
+
+import Daml.Script
+
+getPartyCmd : Text -> Script Party
+getPartyCmd who = do
+  allocatePartyWithHint who (PartyIdHint who)
+
+init : Script ()
+init = do
+  operator <- describe "Allocate operator party"
+    getPartyCmd "Operator"
+  describe "Create operator role" $
+    operator `submit` createCmd OperatorRole with operator
+  pure ()
+
+
+describe : Action m => Text -> m a -> m a
+describe description task = do
+  debug $ "Started: " <> description
+  result <- task
+  debug $ "Finished: " <> description
+  pure result
