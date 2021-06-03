@@ -22,7 +22,6 @@ template OperatorRole
           _ <- create TxLifeMessage with ..
           return ()
 
-
 template TxLifeMessage
   with
     operator : Party
