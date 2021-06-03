@@ -4,7 +4,7 @@
 package com.digitalasset.app
 
 import acord.AcordDecoder
-import com.digitalasset.app.decoders.RequestClearingDecoder
+import com.digitalasset.app.decoders.TXLifeDecoder
 import com.digitalasset.integration.internal.codec.metadata.XsdMetadataReader
 import com.google.common.io.ByteStreams
 import com.typesafe.config.ConfigFactory
@@ -43,7 +43,7 @@ object Commands {
   }
 
   def send(example: URL): Unit = {
-    val decoder = new RequestClearingDecoder(OperatorRole.TEMPLATE_ID, operatorRole.get.id.contractId, metadata)
+    val decoder = new TXLifeDecoder(OperatorRole.TEMPLATE_ID, operatorRole.get.id.contractId, metadata)
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
     client.sendCommands("Acord - SubmitTXLife", operator, List(cmd))
   }
