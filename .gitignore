@@ -75,6 +75,7 @@ ledger-api/.bin
 /bazel-*
 dist-newstyle/
 .ghc.environment.*
+.daml/
 
 # SBT files
 .bsp
