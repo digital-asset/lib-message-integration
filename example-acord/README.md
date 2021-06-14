@@ -1,5 +1,6 @@
-# Acord Demo
+# ACORD Demo
 
+Demonstrate the ingestion of an [ACORD](https://www.acord.org/standards-architecture/acord-data-standards) message.
 ## Prerequisites
 
 - [Install the Daml SDK](https://docs.daml.com/getting-started/installation.html)
@@ -12,17 +13,17 @@
 
 To build the example:
 
-```
+```shell
 make
 ```
 
 Start a sandbox ledger:
 
 ```shell
-make startSandbox
+make start
 ```
 
-To run the demo app:
+To run the demo app, pass it a suitable ACORD XML message:
 
 ```shell
 cd app
