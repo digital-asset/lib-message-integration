@@ -21,7 +21,6 @@ class TXLifeDecoder(templateId: Identifier,
 
   override def decode(s: String, bytes: Array[Byte]): Command = {
         val xml = QueryableXml.parse(bytes)
-        //val xml = QueryableXml.parse(bytes, schema)
 
         // check the root element name
         assert(rootName == xml.getRootName)
