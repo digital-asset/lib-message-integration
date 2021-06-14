@@ -45,7 +45,7 @@ object Commands {
   def send(example: URL): Unit = {
     val decoder = new TXLifeDecoder(OperatorRole.TEMPLATE_ID, operatorRole.get.id.contractId, metadata)
     val cmd = decoder.decode("example", ByteStreams.toByteArray(example.openStream()))
-    client.sendCommands("Acord - SubmitTXLife", operator, List(cmd))
+    client.sendCommands("ACORD - SubmitTXLife", operator, List(cmd))
   }
 
 }
