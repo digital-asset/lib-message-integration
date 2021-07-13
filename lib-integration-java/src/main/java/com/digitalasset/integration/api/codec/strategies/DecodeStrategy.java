@@ -12,7 +12,7 @@ import com.daml.ledger.javaapi.data.Value;
 import com.digitalasset.integration.internal.codec.metadata.DamlTypes.DamlType;
 
 /**
- * Decode a message into a DAML-LF value.
+ * Decode a message into a Daml-LF value.
  */
 public interface DecodeStrategy<T> {
     Value decode(T messageContents, DamlType damlType);

@@ -1,8 +1,8 @@
 -- Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 -- SPDX-License-Identifier: Apache-2.0
 
--- | This represents a generic DAML type model which we can
--- easily map to DAML and DAML-LF.
+-- | This represents a generic Daml type model which we can
+-- easily map to Daml and Daml-LF.
 
 module DA.Daml.TypeModel where
 
@@ -78,10 +78,10 @@ addUsedPrimitiesInFieldToSet s Field {field_type} = usedPrimitivesInType s field
 -- NOTE: Structural types are currently eliminated, but this decision may
 -- be revisted in some cases, e.g. simple pairs.
 data Type a
-    = Prim    PrimType             -- ^ primitive DAML-LF types
+    = Prim    PrimType             -- ^ primitive Daml-LF types
     | Nominal Name                 -- ^ a reference to a record or variant declaration
-    | Product [Field a]            -- ^ structural product (currently not serialisable in DAML-LF)
-    | Sum     [Field a]            -- ^ structural sum (currently not serialisable in DAML-LF)
+    | Product [Field a]            -- ^ structural product (currently not serialisable in Daml-LF)
+    | Sum     [Field a]            -- ^ structural sum (currently not serialisable in Daml-LF)
     | Enum    [(Name, a, Comment)] -- ^ structural enum (a special case of sum)
     -- the following better supports models with inheritance such as
     -- XSD and CDM Rosetta.
