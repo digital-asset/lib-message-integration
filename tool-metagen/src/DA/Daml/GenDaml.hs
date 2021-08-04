@@ -11,8 +11,8 @@ import qualified Data.List as List
 import qualified Data.Set as Set
 
 -- | Convert from the TypeModel to a Daml source text.
-ppModule :: Show a => Module a -> Doc
-ppModule Module{..} =
+ppModule :: Show a => Module a -> Bool -> Doc
+ppModule Module{..} useGhcPrimitives =
     let primitiveTypes = List.foldl' usedPrimitives Set.empty module_decls
         primitiveImports = List.intercalate ", " $ map ppPrimTypeText $ Set.elems primitiveTypes
     in
@@ -20,9 +20,9 @@ ppModule Module{..} =
         $$ text "module" <+> text module_name
         $$ nest 2 (text "( module" <+> text module_name <+> text ") where")
         $$ ppImports module_imports
-        $$ text "import Prelude ( Eq, Ord, Show, Optional, " <> text primitiveImports <> text " )"   -- Detecting Optional is a bit more onerous
+        $$ text "import Prelude ( Eq, Ord(..), Show, Optional, " <> text primitiveImports <> text " )"   -- Detecting Optional is a bit more onerous
         $$ text ""
-        $$ ppDecls module_decls
+        $$ ppDecls useGhcPrimitives module_decls
 
 ppImports :: [Import] -> Doc
 ppImports = vcat . List.intersperse (text "") . map ppImport
@@ -32,12 +32,12 @@ ppImports = vcat . List.intersperse (text "") . map ppImport
     ppImport (Qualified modu prefix) =
         text "import qualified" <+> text modu <+> text "as" <+> text prefix
 
-ppDecls :: Show a => [Decl a] -> Doc
-ppDecls = vcat . List.intersperse (text "") . map ppDecl
+ppDecls :: Show a => Bool -> [Decl a] -> Doc
+ppDecls useGhcPrimitives = vcat . List.intersperse (text "") . map (ppDecl useGhcPrimitives)
 
-ppDecl :: Show a => Decl a -> Doc
+ppDecl :: Show a => Bool -> Decl a -> Doc
 
-ppDecl (EnumType name constrs comment) =
+ppDecl _useGhcPrimitives (EnumType name constrs comment) =
     ppComment Before comment
         $$ text "data" <+> text name
         $$ nest 4 (ppBlock "=" "|" "deriving (Eq, Ord, Show)" ppConstr constrs)
@@ -46,13 +46,23 @@ ppDecl (EnumType name constrs comment) =
         = (text name <> text "_" <> text cname)
               $$ ppComment After comment'
 
-ppDecl (RecordType name fields comment) =
+ppDecl useGhcPrimitives (RecordType name fields comment) =
     ppComment Before comment
     $$ text "data" <+> text name <+> text "=" <+> text name <+> text "with"
-        $$ nest 4 (ppRecordFields fields
-                  $$ nest 2 (text "deriving (Eq, Ord, Show)"))
+        $$ nest 4 (ppRecordFields fields)
+        $$ derivingDecl useGhcPrimitives name
+  where
+    derivingDecl :: Bool -> String -> Doc
+    derivingDecl False _name =
+        nest 2 $ text "deriving (Eq, Ord, Show)"
+    derivingDecl True name =
+        text ""
+        $$ text "instance Eq" <+> text name <+> text "where" <+> text "(==) = GHC.Types.primitive @\"BEEqual\""
+        $$ text "instance Ord" <+> text name <+> text "where" <+> text "(<=) = GHC.Types.primitive @\"BELessEq\""
+        $$ text "instance Show" <+> text name <+> text "where"
+          $$ nest 2 (text "show" <+> text name <+> text ("{} = \"" ++ name ++ "\""))
 
-ppDecl (VariantType name fields comment)
+ppDecl _useGhcPrimitives (VariantType name fields comment)
     | not (null fields) =
       ppComment Before comment
       $$ text "data" <+> text name
@@ -69,13 +79,13 @@ ppDecl (VariantType name fields comment)
 
 -- TODO The Daml-LF story on these is not yet clear.
 -- For now, emit as type synonyms
-ppDecl (NewType name base comment) =
+ppDecl _useGhcPrimitives (NewType name base comment) =
     ppComment Before comment
     {-- $$ text "newtype" <+> text name <+> text "=" <+> text name <+> ppType single id base
     --     $$ nest 4 (text "deriving (Eq, Ord, Show)") -}
     $$ text "type" <+> text name <+> text "=" <+> ppType single id base
 
-ppDecl d = text $ "-- UNSUPPORTED: " ++ show d
+ppDecl _useGhcPrimitives d = text $ "-- UNSUPPORTED: " ++ show d
 
 ppRecordFields :: [Field a] -> Doc
 ppRecordFields fs
