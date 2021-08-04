@@ -667,7 +667,6 @@ mkFieldType QName{..} =
 
         "decimal"            | isXsd -> Prim PrimDecimal
         "double"             | isXsd -> Prim PrimDecimal
-
         "integer"            | isXsd -> Prim PrimInteger
         "int"                | isXsd -> Prim PrimInteger
         "nonNegativeInteger" | isXsd -> Prim PrimInteger
