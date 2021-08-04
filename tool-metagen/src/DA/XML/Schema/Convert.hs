@@ -726,7 +726,7 @@ renameRecField (c:cs) = avoidKeywords $ Char.toLower c : cs
   where
     avoidKeywords n | n `Set.member` keywords = n ++ "_" -- append underscore
                     | otherwise = n
-    keywords = Set.fromList ["choice","sequence","any","time","date","type","id","dayOfWeek"]
+    keywords = Set.fromList ["choice","sequence","any","time","date","type","id","dayOfWeek","class"]
 renameRecField _ = error "renameRecField: unexpected single character name"
 
 renameVarField :: Name -> Name
