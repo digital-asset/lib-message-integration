@@ -8,7 +8,6 @@
 -- | Generate Daml types and metadata for XML XSD schema.
 module Main where
 
-import           Control.Applicative        ((<$>))
 import           Control.Monad
 import           Control.Monad.Logger
 import           Control.Monad.Reader
@@ -33,10 +32,9 @@ import qualified Data.Map                   as Map
 import           Data.Set                   (Set)
 import qualified Data.Set                   as Set
 import qualified Data.Text                  as T
-import           Data.Semigroup             ((<>))
 import           Data.Version               (showVersion)
 import           Options.Applicative
-import           Options.Applicative.Types  (readerAsk, readerError)
+import           Options.Applicative.Types  (readerAsk)
 import qualified System.Directory           as Dir
 import           System.Exit                (exitFailure)
 import           System.FilePath
