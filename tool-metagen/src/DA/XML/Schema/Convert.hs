@@ -672,6 +672,8 @@ mkFieldType QName{..} =
         "int"                | isXsd -> Prim PrimInteger
         "nonNegativeInteger" | isXsd -> Prim PrimInteger
         "positiveInteger"    | isXsd -> Prim PrimInteger
+        "unsignedByte"       | isXsd -> Prim PrimInteger
+        "unsignedInt"        | isXsd -> Prim PrimInteger
 
         "date"               | isXsd -> Prim PrimDate
         "dateTime"           | isXsd -> Prim PrimTime
