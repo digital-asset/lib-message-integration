@@ -663,16 +663,20 @@ mkFieldType QName{..} =
         -- The xsd:any type, which we do not support (requires ExistentialTypes in Daml).
         "any"                | isXsd -> Prim PrimText
 
+        "boolean"            | isXsd -> Prim PrimBool
+
         "decimal"            | isXsd -> Prim PrimDecimal
         "double"             | isXsd -> Prim PrimDecimal
+
         "integer"            | isXsd -> Prim PrimInteger
         "int"                | isXsd -> Prim PrimInteger
         "nonNegativeInteger" | isXsd -> Prim PrimInteger
         "positiveInteger"    | isXsd -> Prim PrimInteger
-        "boolean"            | isXsd -> Prim PrimBool
-        "string"             | isXsd -> Prim PrimText
+
         "date"               | isXsd -> Prim PrimDate
         "dateTime"           | isXsd -> Prim PrimTime
+
+        "string"             | isXsd -> Prim PrimText
         "href"               | isXsd -> Prim PrimText
         "normalizedString"   | isXsd -> Prim PrimText
         "token"              | isXsd -> Prim PrimText
