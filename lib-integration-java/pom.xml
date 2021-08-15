@@ -9,7 +9,7 @@
     <packaging>jar</packaging>
     <version>0.1-SNAPSHOT</version>
     <name>finance-integration</name>
-    <url>http://www.daml.com</url>
+    <url>https://www.daml.com</url>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,19 +21,14 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.daml.ledger</groupId>
+            <groupId>com.daml</groupId>
             <artifactId>bindings-java</artifactId>
-            <version>100.12.1</version>
+            <version>1.15.0</version>
         </dependency>
         <dependency>
-            <groupId>com.daml.ledger</groupId>
+            <groupId>com.daml</groupId>
             <artifactId>bindings-rxjava</artifactId>
-            <version>100.12.1</version>
-        </dependency>
-        <dependency>
-            <groupId>com.digitalasset</groupId>
-            <artifactId>daml-lf-archive</artifactId>
-            <version>100.12.1</version>
+            <version>1.15.0</version>
         </dependency>
         <dependency>
             <groupId>com.google.protobuf</groupId>
@@ -64,7 +59,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>29.0-jre</version>
+            <version>25.1-jre</version>
         </dependency>
          <dependency>
              <groupId>org.slf4j</groupId>
@@ -110,7 +105,7 @@
                 </plugin>
                 <plugin>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.20.1</version>
+                    <version>2.22.0</version>
                 </plugin>
                 <plugin>
                     <artifactId>maven-jar-plugin</artifactId>
@@ -135,6 +130,10 @@
                 <plugin>
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.0.1</version>
+                </plugin>
+                <plugin>
+                    <artifactId>maven-assembly-plugin</artifactId>
+                    <version>3.2.0</version>
                 </plugin>
             </plugins>
         </pluginManagement>
@@ -221,7 +220,9 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptor>src/main/assembly/api.xml</descriptor>
+                            <descriptors>
+                                <descriptor>src/main/assembly/api.xml</descriptor>
+                            </descriptors>
                         </configuration>
                     </execution>
                     <execution>
@@ -231,7 +232,9 @@
                             <goal>single</goal>
                         </goals>
                         <configuration>
-                            <descriptor>src/main/assembly/distribution.xml</descriptor>
+                            <descriptors>
+                                <descriptor>src/main/assembly/distribution.xml</descriptor>
+                            </descriptors>
                             <outputDirectory>${package.output.directory}/release-candidates</outputDirectory>
                             <finalName>finance-integration</finalName>
                             <appendAssemblyId>false</appendAssemblyId>

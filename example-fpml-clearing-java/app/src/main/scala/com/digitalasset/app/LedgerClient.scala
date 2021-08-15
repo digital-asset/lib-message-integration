@@ -19,8 +19,8 @@ import io.reactivex.Flowable
 import org.slf4j.{Logger, LoggerFactory}
 
 import scala.collection.JavaConverters._
-import com.digitalasset.ledger.api.v1.testing.TimeServiceGrpc
-import com.digitalasset.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
+import com.daml.ledger.api.v1.testing.TimeServiceGrpc
+import com.daml.ledger.api.v1.testing.TimeServiceOuterClass.{GetTimeRequest, SetTimeRequest}
 
 case class Config
   (
@@ -79,15 +79,11 @@ class LedgerClient(config: Config) {
 
   // Send a list of commands
   def sendCommands(wfId: String, party: String, commands: List[Command]): Unit = {
-    val currentTime = getTime()
-    val maxRecordTime = currentTime.plusSeconds(30)
     client.getCommandClient.submitAndWait(
       wfId,
       config.appId,
       UUID.randomUUID().toString,
       party,
-      currentTime,
-      maxRecordTime,
       commands.asJava
     )
   }
@@ -143,8 +139,9 @@ class LedgerClient(config: Config) {
       config.appId,
       cId,
       party,
-      time,
-      maxRecordTime,
+      Optional.empty(),
+      Optional.empty(),
+      Optional.empty(),
       commands.asJava
     )
   }
@@ -153,9 +150,10 @@ class LedgerClient(config: Config) {
   // TODO clean-up this mapping
   private def loadTemplates(): Map[String, Identifier] = {
 
-    // find template identifier, assume only two packages in sandbox, the first of which is the stdlib
     // FIXME I cannot inspect the metadata of a package without downloading it, which blows grpc limits
-    val pkgId = client.getPackageClient().listPackages().blockingFirst()
+    // old way: client.getPackageClient().listPackages().blockingFirst()
+    // new way: Copied from starting Navigator first.
+    val pkgId = "bdb472cbb21756003b72ad14a23245b0a11af43a7d443b6e8a0b157de41673d7"
         Map( "RequestClearingEvent" -> new Identifier(pkgId, "Role.ClearingMember", "RequestClearingEvent"),
              "ClearingConfirmedEvent" -> new Identifier(pkgId, "Role.ClearingMember", "ClearingConfirmedEvent"),
              "AcknowledgementEvent" -> new Identifier(pkgId, "Role.ClearingMember", "AcknowledgementEvent"),

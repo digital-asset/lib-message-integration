@@ -10,6 +10,7 @@ package com.digitalasset.integration.internal.codec.strategies;
 
 import com.daml.ledger.javaapi.data.*;
 import com.daml.ledger.javaapi.data.Date;
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Value;
 import com.digitalasset.integration.api.codec.exceptions.CodecException;
 import com.digitalasset.integration.api.codec.strategies.DecodeStrategy;
@@ -180,18 +181,18 @@ public final class DomXsdDecodeStrategy implements DecodeStrategy<QueryableXml> 
     // decode a sequence of elements
     private Either<Set<ParseFailure>, Result> decodeSequence(Element parentElem, Stream<Node> startCursor, DamlType fieldType, String path) {
         logger.trace("[sequence] : {} ({})", fieldType, path);
-        List<Record.Field> fields = new ArrayList<>();
+        List<DamlRecord.Field> fields = new ArrayList<>();
         Stream<Node> cursor = startCursor;
         for (FieldMetadata<XmlFieldMeta> childField : metadata.getFields(fieldType)) {
            Either<Set<ParseFailure>, Result> res = decodeField(parentElem, cursor, childField, path);
            if(res.isRight()) {
-               fields.add(new Record.Field(res.get().getValue()));
+               fields.add(new DamlRecord.Field(res.get().getValue()));
                cursor = res.get().getCursor();
            } else {
                return res;
            }
         }
-        return Either.right(new Result(new Record(fields), cursor));
+        return Either.right(new Result(new DamlRecord(fields), cursor));
     }
 
     // decode an element that is potentially a member of a substitution group

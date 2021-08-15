@@ -6,7 +6,7 @@ package com.digitalasset.app.bot
 import java.net.URL
 import java.time.Clock
 
-import com.daml.ledger.javaapi.data.Record.Field
+import com.daml.ledger.javaapi.data.DamlRecord.Field
 import com.daml.ledger.javaapi.data._
 import com.daml.ledger.rxjava.components.LedgerViewFlowable
 import com.daml.ledger.rxjava.components.helpers.CreatedContract
@@ -20,7 +20,7 @@ import scala.collection.JavaConverters._
 
 class EventProcessor(clearingHouseTid: Identifier,
                      clients: Map[String, ContractId],
-                     members: Map[String, ContractId]) extends Bot[Record] {
+                     members: Map[String, ContractId]) extends Bot[DamlRecord] {
 
   val metadata = XsdMetadataReader.fromJSON(mkClasspathURL("classpath:fpml/metadata/v510/Confirmation.json"))
 
@@ -31,16 +31,16 @@ class EventProcessor(clearingHouseTid: Identifier,
 
   def name: String = "EventProcessor " + clearingHouseTid.getEntityName
 
-  def transform(getTid: String => Identifier, c: CreatedContract): Record = c.getCreateArguments
+  def transform(getTid: String => Identifier, c: CreatedContract): DamlRecord = c.getCreateArguments
 
-  def run(getTid: String => Identifier, ledgerView: LedgerViewFlowable.LedgerView[Record], clock: Clock): List[Command] = {
+  def run(getTid: String => Identifier, ledgerView: LedgerViewFlowable.LedgerView[DamlRecord], clock: Clock): List[Command] = {
     val eventTid = getTid("RequestClearingEvent")
     val events  = ledgerView.getContracts(eventTid).asScala.toList
     val cmds = events.flatMap {
       case (cId, r) =>
         logger.info("Handling request clearing event " + cId)
-        val context = makeEventContext(r.get("partyInfo"))
-        val arg = new Record(List(
+        val context = makeEventContext(r.getFieldsMap.get("partyInfo").asRecord().get())
+        val arg = new DamlRecord(List(
                   new Field("event", r),
                   new Field("context", context)
                 ).asJava)
@@ -53,24 +53,24 @@ class EventProcessor(clearingHouseTid: Identifier,
     cmds
   }
 
-  def showEvents(ledgerView: LedgerViewFlowable.LedgerView[Record], tid: Identifier, rootElemName: String, payloadField: String ) = {
+  def showEvents(ledgerView: LedgerViewFlowable.LedgerView[DamlRecord], tid: Identifier, rootElemName: String, payloadField: String ) = {
     val encoder = new FpMLEncoder(rootElemName, metadata, null)
     val events = ledgerView.getContracts(tid).asScala.toList
     events.flatMap {
       case (_, r) => {
-        logger.debug(encoder.encodePretty(r.get(payloadField)))
+        logger.debug(encoder.encodePretty(r.getFieldsMap().get(payloadField)))
         None
       }
     }
     ()
   }
 
-  def makeEventContext(partyInfo: Record): Record =
-    new Record(List(
-      new Field("clientCid1", clients(partyInfo.get[Text]("party1Name").getValue)),
-      new Field("clientCid2", clients(partyInfo.get[Text]("party2Name").getValue)),
-      new Field("memberCid1", members(partyInfo.get[Text]("member1Name").getValue)),
-      new Field("memberCid2", members(partyInfo.get[Text]("member2Name").getValue))
+  def makeEventContext(partyInfo: DamlRecord): DamlRecord =
+    new DamlRecord(List(
+      new Field("clientCid1", clients(partyInfo.getFieldsMap.get("party1Name").toString())),
+      new Field("clientCid2", clients(partyInfo.getFieldsMap.get("party2Name").toString())),
+      new Field("memberCid1", members(partyInfo.getFieldsMap.get("member1Name").toString())),
+      new Field("memberCid2", members(partyInfo.getFieldsMap.get("member2Name").toString()))
     ).asJava)
 
 }
