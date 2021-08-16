@@ -218,7 +218,7 @@ simpleType = do
       unionOf  = do
           e  <- xsdElement "union"
           XSD.UnionOf
-              <$> attribute (mkQName "memberTypes") (many qname) e
+              <$> optionalAttribute (mkQName "memberTypes") (many qname) e
               <*> recurseWith (xsdTag "simpleType") (many simpleType) (elContent e)
 
 restriction :: XMLParser t -> XMLParser (XSD.Restriction t)
@@ -473,6 +473,14 @@ attribute qn p (Element n as _ _) =
     case XML.lookupAttr qn as of
          Nothing  -> fail $ "attribute "++show qn
                           ++" not present in <"++show n++">"
+         Just av  -> do
+             namespaces <- getState
+             either (fail . show) return $ runParser p namespaces (show qn) av
+
+optionalAttribute :: Monoid a => QName -> TextParser a -> Element -> XMLParser a
+optionalAttribute qn p (Element _ as _ _) =
+    case XML.lookupAttr qn as of
+         Nothing  -> mempty
          Just av  -> do
              namespaces <- getState
              either (fail . show) return $ runParser p namespaces (show qn) av

@@ -5,7 +5,6 @@
 --
 module DA.CDM.Rosetta.Convert where
 
-import           Control.Applicative   ((<$>))
 import           Control.Monad.Logger
 import           Control.Monad.Reader
 import           DA.CDM.Rosetta.Schema as Rosetta

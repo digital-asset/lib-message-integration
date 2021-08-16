@@ -663,15 +663,22 @@ mkFieldType QName{..} =
         -- The xsd:any type, which we do not support (requires ExistentialTypes in Daml).
         "any"                | isXsd -> Prim PrimText
 
+        "boolean"            | isXsd -> Prim PrimBool
+
         "decimal"            | isXsd -> Prim PrimDecimal
+        "double"             | isXsd -> Prim PrimDecimal
+
         "integer"            | isXsd -> Prim PrimInteger
         "int"                | isXsd -> Prim PrimInteger
         "nonNegativeInteger" | isXsd -> Prim PrimInteger
         "positiveInteger"    | isXsd -> Prim PrimInteger
-        "boolean"            | isXsd -> Prim PrimBool
-        "string"             | isXsd -> Prim PrimText
+        "unsignedByte"       | isXsd -> Prim PrimInteger
+        "unsignedInt"        | isXsd -> Prim PrimInteger
+
         "date"               | isXsd -> Prim PrimDate
         "dateTime"           | isXsd -> Prim PrimTime
+
+        "string"             | isXsd -> Prim PrimText
         "href"               | isXsd -> Prim PrimText
         "normalizedString"   | isXsd -> Prim PrimText
         "token"              | isXsd -> Prim PrimText
@@ -690,6 +697,8 @@ mkFieldType QName{..} =
         "gMonthDay"          | isXsd -> Prim PrimText
         "gDay"               | isXsd -> Prim PrimText
         "gMonth"             | isXsd -> Prim PrimText
+
+        "NMTOKEN"            | isXsd -> Prim PrimText
 
         name                         -> Nominal $ convTypeName name
   where
@@ -723,7 +732,7 @@ renameRecField (c:cs) = avoidKeywords $ Char.toLower c : cs
   where
     avoidKeywords n | n `Set.member` keywords = n ++ "_" -- append underscore
                     | otherwise = n
-    keywords = Set.fromList ["choice","sequence","any","time","date","type","id","dayOfWeek"]
+    keywords = Set.fromList ["choice","sequence","any","time","date","type","id","dayOfWeek","class"]
 renameRecField _ = error "renameRecField: unexpected single character name"
 
 renameVarField :: Name -> Name
