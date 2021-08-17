@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2019-2021 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 /*
@@ -9,7 +9,7 @@
 package com.digitalasset.integration.internal.codec.strategies;
 
 import com.daml.ledger.javaapi.data.DamlOptional;
-import com.daml.ledger.javaapi.data.Record;
+import com.daml.ledger.javaapi.data.DamlRecord;
 import com.daml.ledger.javaapi.data.Value;
 import com.daml.ledger.javaapi.data.Variant;
 import com.digitalasset.integration.api.codec.exceptions.CodecException;
@@ -49,8 +49,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
     private final XsdMetadata metadata;
     private final String rootElementName;
 
-    public DomXsdEncodeStrategy(String rootElementName,
-                         XsdMetadata metadata) {
+    public DomXsdEncodeStrategy(String rootElementName, XsdMetadata metadata) {
         this.metadata = metadata;
         this.rootElementName = rootElementName;
     }
@@ -75,7 +74,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
 
         // Unless verbose streaming is enabled, gRPC does not send labels for values.
         // It is purely based on the ordering of the fields.
-        Record messageContent = messageData.asRecord().get();
+        DamlRecord messageContent = messageData.asRecord().get();
         populateElement(doc, root, damlType, messageContent);
 
         return doc;
@@ -228,7 +227,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
                                 Element parent,
                                 DamlType fieldType,
                                 Value fieldValue) {
-        Record record = fieldValue.asRecord().get();
+        DamlRecord record = fieldValue.asRecord().get();
         encodeRecord(doc, parent, fieldType, record);
     }
 
@@ -264,9 +263,9 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
     private void encodeRecord(Document doc,
                               Element parent,
                               DamlType damlType,
-                              Record damlValue) {
+                              DamlRecord damlValue) {
         Iterator<FieldMetadata<XmlFieldMeta>> metadataIterator = metadata.getFields(damlType).iterator();
-        for (Record.Field field : damlValue.getFields()) {
+        for (DamlRecord.Field field : damlValue.getFields()) {
             final FieldMetadata<XmlFieldMeta> fieldMetadata = metadataIterator.next();
             encodeField(doc, parent, fieldMetadata, field.getValue());
         }
@@ -288,7 +287,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
                                Variant variant) {
         FieldMetadata<XmlFieldMeta> variantField = lookupVariantField(
                 variant.getConstructor()+"Contents", damlType);
-        Optional<Record> record = variant.getValue().asRecord();
+        Optional<DamlRecord> record = variant.getValue().asRecord();
         if(record.isPresent()) {
             encodeRecord(doc, parent, variantField.getType(), record.get());
         } else {
@@ -303,7 +302,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
                                Variant variant) {
         FieldMetadata<XmlFieldMeta> variantField = lookupVariantField(
                 variant.getConstructor(), damlType);
-        Optional<Record> record = variant.getValue().asRecord();
+        Optional<DamlRecord> record = variant.getValue().asRecord();
         if(record.isPresent()) {
             encodeRecord(doc, parent, variantField.getType(), record.get());
             parent.setAttribute("xsi:type", variantField.getType().getName());

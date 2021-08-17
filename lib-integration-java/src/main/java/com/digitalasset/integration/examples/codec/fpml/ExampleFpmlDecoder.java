@@ -1,4 +1,4 @@
-// Copyright (c) 2019 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
+// Copyright (c) 2019-2021 Digital Asset (Switzerland) GmbH and/or its affiliates. All rights reserved.
 // SPDX-License-Identifier: Apache-2.0
 
 /*
@@ -8,7 +8,12 @@
  */
 package com.digitalasset.integration.examples.codec.fpml;
 
-import com.daml.ledger.javaapi.data.*;
+import com.daml.ledger.javaapi.data.Command;
+import com.daml.ledger.javaapi.data.ExerciseCommand;
+import com.daml.ledger.javaapi.data.Identifier;
+import com.daml.ledger.javaapi.data.DamlRecord;
+import com.daml.ledger.javaapi.data.Value;
+
 import com.digitalasset.integration.api.codec.exceptions.CodecException;
 import com.digitalasset.integration.api.codec.Decoder;
 import com.digitalasset.integration.api.codec.exceptions.SchemaValidationException;
@@ -52,8 +57,8 @@ public class ExampleFpmlDecoder implements Decoder {
 
         DomXsdDecodeStrategy decodingStrategy = new DomXsdDecodeStrategy(metadata);
 
-        Value choiceArgument = new Record(
-                asList(new Record.Field(decodingStrategy.decode(xml, rootType))));
+        Value choiceArgument = new DamlRecord(
+                asList(new DamlRecord.Field(decodingStrategy.decode(xml, rootType))));
 
         return new ExerciseCommand(templateId, contractId, rootNameToChoiceName(rootName), choiceArgument);
     }
