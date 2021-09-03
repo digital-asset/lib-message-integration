@@ -243,12 +243,8 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
             }
         } else if(cardinality.equals(FieldMetadata.Cardinality.MANY1)) {
             List<Value> values = value.asList().get().getValues();
-            if (values.isEmpty()) {
-                throw new CodecException("Unexpected empty list for type "+elemType.toString());
-            } else {
-                for (Value elemValue : values) {
-                    encoder.accept(Tuple.of(elemType, elemValue));
-                }
+            for (Value elemValue : values) {
+                encoder.accept(Tuple.of(elemType, elemValue));
             }
         } else if (cardinality.equals(FieldMetadata.Cardinality.OPTIONAL)) {
             DamlOptional damlOpt = value.asOptional().get();
@@ -342,7 +338,7 @@ public class DomXsdEncodeStrategy implements EncodeStrategy<QueryableXml> {
         } else if(primType==DamlTypes.INT64) {
             return String.valueOf(damlValue.asInt64().get().getValue());
         } else if(primType==DamlTypes.DECIMAL) {
-            return damlValue.asDecimal().get().getValue().stripTrailingZeros().toPlainString();
+            return damlValue.asNumeric().get().getValue().stripTrailingZeros().toPlainString();
         } else if(primType==DamlTypes.TIME) {
             Instant instant = damlValue.asTimestamp().get().getValue();
             return InstantFormatter.asZulu().formatAsDateTime(instant);

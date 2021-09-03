@@ -14,6 +14,7 @@ import org.w3c.dom.Node;
 
 import java.io.*;
 import java.net.URL;
+import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
@@ -45,6 +46,8 @@ public class XmlUtils {
     public static void writeTo(Node document, Writer writer) throws TransformerException {
         Transformer transformer = TRANSFORMER_FACTORY.newTransformer();
         transformer.setOutputProperty ( "encoding" , "UTF-8" ) ;
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+        transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "2");
         transformer.transform(new DOMSource(document), new StreamResult(writer));
     }
 
